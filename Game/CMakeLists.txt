@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(IS_CLIENT ON)
 
-if (IS_CLIENT)
+if(IS_CLIENT)
 
   project(Client)
 
@@ -18,7 +18,7 @@ if (IS_CLIENT)
   target_include_directories(${PROJECT_NAME}
     PUBLIC Client/include
     PUBLIC External/raylib/src
-    PUBLIC External/entt/src/entt
+    PUBLIC External/entt/src
     PUBLIC External/enet/include
   )
 
@@ -36,7 +36,7 @@ else()
 
   target_include_directories(${PROJECT_NAME}
     PUBLIC Server/include
-    PUBLIC External/entt/src/entt
+    PUBLIC External/entt/src
     PUBLIC External/enet/include
   )
 
