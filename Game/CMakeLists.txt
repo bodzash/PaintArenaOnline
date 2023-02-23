@@ -33,16 +33,18 @@ else()
   add_executable(${PROJECT_NAME} Server/src/Main.cpp)
 
   add_subdirectory(External/enet)
+  add_subdirectory(External/mingw-std-threads)
 
   target_include_directories(${PROJECT_NAME}
     PUBLIC Server/include
     PUBLIC External/entt/src
     PUBLIC External/enet/include
+    PUBLIC External/mingw_stdthreads
   )
 
   target_link_directories(${PROJECT_NAME} PUBLIC enet)
 
-  target_link_libraries(${PROJECT_NAME} enet)
+  target_link_libraries(${PROJECT_NAME} enet mingw_stdthreads)
 
 endif(IS_CLIENT)
 unset(IS_CLIENT CACHE)
