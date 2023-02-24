@@ -36,6 +36,8 @@ void PollNet()
 
     case ENET_EVENT_TYPE_RECEIVE:
       std::cout << Event.packet->data << "\n";
+
+      enet_packet_destroy(Event.packet);
       break;
     }
   }
@@ -43,7 +45,7 @@ void PollNet()
 
 void SendPacket()
 {
-  string Msg = "Gitler";
+  string Msg = "Hi from client :)";
   ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
     ENET_PACKET_FLAG_RELIABLE);
   enet_peer_send(Peer, 0, Packet);

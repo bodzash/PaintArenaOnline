@@ -1,23 +1,8 @@
-#include "raylib.h"
-#include "entt/entt.hpp"
-#include "Net.h"
 #include <iostream>
+#include "raylib.h"
+#include "entt/entity/registry.hpp"
 
-struct PositionComponent
-{
-  int x, y = 0;
-};
-
-void RendererSystem(entt::registry &Reg)
-{
-  auto View = Reg.view<PositionComponent>();
-
-  for(auto Entity: View)
-  {
-    auto& Pos = View.get<PositionComponent>(Entity);
-    DrawCircle(Pos.x, Pos.y, 32.0f, WHITE);
-  }
-}
+#include "Net.h"
 
 entt::registry Registry;
 
@@ -30,17 +15,16 @@ int main(void)
   SetTargetFPS(60);
 
   Connect();
-
-  auto Player = Registry.create();
-  Registry.emplace<PositionComponent>(Player, 32, 44);
   
   while (!WindowShouldClose())
   {
     PollNet();
+
+    if (IsKeyPressed(KEY_SPACE)) SendPacket();
+
     BeginDrawing();
       ClearBackground(RAYWHITE);
       DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-      RendererSystem(Registry);
     EndDrawing();
   }
   CloseWindow();
