@@ -151,8 +151,12 @@ int main()
 
       case ENET_EVENT_TYPE_RECEIVE:
         std::cout << "Message: " << Event.packet->data << "\n";
-        //std::cout << "Packet: " << Event.packet << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
+        //std::cout << "Packet: " << Event.packet << "\n";
+
+        int x = (320 >> 8) & 0xff;
+        
+        std::cout << "First byte: " << "\n";
 
         enet_packet_destroy(Event.packet);
         break;

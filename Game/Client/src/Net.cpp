@@ -43,6 +43,11 @@ void PollNet()
   }
 }
 
+struct Command
+{
+  
+};
+
 void SendPacket()
 {
   string Msg = "Hi from client :)";
