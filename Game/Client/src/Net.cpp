@@ -60,7 +60,7 @@ void PollNet(entt::registry& Scene)
 
       if (PacketHeader == 0)
       {
-        PlayerUpdate* Message = (PlayerUpdate*)Event.packet->data;
+        PlayerUpdate* Msg = (PlayerUpdate*)Event.packet->data;
 
         auto View = Scene.view<NetId, Position>();
         for(auto Entity : View)
@@ -68,10 +68,10 @@ void PollNet(entt::registry& Scene)
           auto& Nid = Scene.get<NetId>(Entity);
           auto& Pos = Scene.get<Position>(Entity);
 
-          if (Nid.Id == (int)Message->NetworkId)
+          if (Nid.Id == (int)Msg->NetworkId)
           {
-            Pos.x = Message->x;
-            Pos.y = Message->y;
+            Pos.x = Msg->x;
+            Pos.y = Msg->y;
           }
         }
       }

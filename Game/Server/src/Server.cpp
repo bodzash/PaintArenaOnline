@@ -223,38 +223,34 @@ int main()
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
+        // Send something to the currently connected peer
+        string Msg = "W";
+        ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1, 1);
+        enet_peer_send(Event.peer, 0, Packet);
+
         //NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
         //Event.peer->data = &NetworkClients[CurrentNetworkId];
         //CurrentNetworkId++;
 
         //std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
-
-        //Broadcast(Server);
         }
         break;
 
       case ENET_EVENT_TYPE_RECEIVE:
         {
-        //std::cout << "Peer: " << Event.peer << "\n";
-
         //uint32_t PeerData = *(uint32_t*)Event.peer->data;
-
         uint8_t PacketHeader;
         memmove(&PacketHeader, Event.packet->data, 1);
         
+        //std::cout << "Peer: " << Event.peer << "\n";
         //std::cout << "Header: " << (int)PacketHeader << "\n";
         //std::cout << "Peer Data: " << PeerData << "\n";
 
         if (PacketHeader == 0)
         {
           Command* Cmd = (Command*)Event.packet->data;
-          ApplyNetworkInputToPlayer(Scene, NetworkClients[0]/*(entt::entity)PeerData*/, Cmd);
-          /*
-          std::cout << "right: " << Cmd->Right << "\n";
-          std::cout << "left: " << Cmd->Left << "\n";
-          std::cout << "up: " << Cmd->Up << "\n";
-          std::cout << "down: " << Cmd->Down << "\n";
-          */
+          /*(entt::entity)PeerData*/
+          ApplyNetworkInputToPlayer(Scene, NetworkClients[0], Cmd);
         }
 
         enet_packet_destroy(Event.packet);
