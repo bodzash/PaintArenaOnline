@@ -22,7 +22,17 @@ void Broadcast(ENetHost* Server)
   ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
     ENET_PACKET_FLAG_RELIABLE);
   enet_host_broadcast(Server, 0, Packet);
+
+  //enet_packet_destroy(Packet);
 }
+
+struct PlayerUpdate
+{
+  uint8_t Id;
+  uint8_t NetworkId;
+  float x;
+  float y;
+};
 
 struct Position
 {
@@ -167,6 +177,9 @@ int main()
 
   uint8_t CurrentNetworkId = 0;
   entt::entity NetworkClients[5];
+
+  NetworkClients[0] = CreatePlayer(Scene, CurrentNetworkId);
+  NetworkClients[1] = CreatePlayer(Scene, CurrentNetworkId++);
   
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
 
@@ -210,21 +223,21 @@ int main()
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
-        NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
-        Event.peer->data = &NetworkClients[CurrentNetworkId];
-        CurrentNetworkId++;
+        //NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
+        //Event.peer->data = &NetworkClients[CurrentNetworkId];
+        //CurrentNetworkId++;
 
-        std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
+        //std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
 
-        Broadcast(Server);
+        //Broadcast(Server);
         }
         break;
 
       case ENET_EVENT_TYPE_RECEIVE:
         {
-        std::cout << "Peer: " << Event.peer << "\n";
+        //std::cout << "Peer: " << Event.peer << "\n";
 
-        uint32_t PeerData = *(uint32_t*)Event.peer->data;
+        //uint32_t PeerData = *(uint32_t*)Event.peer->data;
 
         uint8_t PacketHeader;
         memmove(&PacketHeader, Event.packet->data, 1);
@@ -235,7 +248,7 @@ int main()
         if (PacketHeader == 0)
         {
           Command* Cmd = (Command*)Event.packet->data;
-          ApplyNetworkInputToPlayer(Scene, (entt::entity)PeerData, Cmd);
+          ApplyNetworkInputToPlayer(Scene, NetworkClients[0]/*(entt::entity)PeerData*/, Cmd);
           /*
           std::cout << "right: " << Cmd->Right << "\n";
           std::cout << "left: " << Cmd->Left << "\n";
@@ -256,9 +269,14 @@ int main()
 
     // Update loop
     InputToMovementSystem(Scene);
-    DynamicMovementSystem(DeltaTime, Scene);
+    DynamicMovementSystem(/*DeltaTime*/ 0.016f, Scene);
     ResetPlayerInputSystem(Scene);
 
+    auto& Pos = Scene.get<Position>(NetworkClients[0]);
+    PlayerUpdate Msg = { 0, 0, Pos.x, Pos.y };
+    ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+    enet_host_broadcast(Server, 0, Packet);
+    
     // For fast shutdown
     if (GetKeyState(VK_SPACE)) return 1;
 
@@ -285,7 +303,7 @@ int main()
     // Network Poll
     // Update
 
-    std::cout << 0.0016f << '\n';
+    std::cout << 0.016f << '\n';
 
     // End of Frame
     std::this_thread::sleep_until(next_frame);

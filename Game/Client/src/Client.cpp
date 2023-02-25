@@ -43,6 +43,10 @@ int main(void)
 {
   entt::registry Scene;
 
+  entt::entity Player = Scene.create();
+  Scene.emplace<NetId>(Player, 0);
+  Scene.emplace<Position>(Player, 0, 0);
+
   InitWindow(640, 480, "Game Client");
   SetTargetFPS(60);
 

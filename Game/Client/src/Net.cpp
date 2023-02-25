@@ -10,6 +10,25 @@ ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
 
+struct Position
+{
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
+struct NetId
+{
+  int Id;
+};
+
+struct PlayerUpdate
+{
+  uint8_t Id;
+  uint8_t NetworkId;
+  float x;
+  float y;
+};
+
 void ConnectToServer()
 {
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
@@ -35,9 +54,27 @@ void PollNet(entt::registry& Scene)
       break;
 
     case ENET_EVENT_TYPE_RECEIVE:
-      std::cout << Event.packet->data << "\n";
+      uint8_t PacketHeader;
+      memmove(&PacketHeader, Event.packet->data, 1);
+      //std::cout << "Header: " << (int)PacketHeader << "\n";
 
+      if (PacketHeader == 0)
+      {
+        PlayerUpdate* Message = (PlayerUpdate*)Event.packet->data;
 
+        auto View = Scene.view<NetId, Position>();
+        for(auto Entity : View)
+        {
+          auto& Nid = Scene.get<NetId>(Entity);
+          auto& Pos = Scene.get<Position>(Entity);
+
+          if (Nid.Id == (int)Message->NetworkId)
+          {
+            Pos.x = Message->x;
+            Pos.y = Message->y;
+          }
+        }
+      }
 
       enet_packet_destroy(Event.packet);
       break;
@@ -69,7 +106,6 @@ void SendMovement(bool Left, bool Right, bool Up, bool Down)
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
 
   enet_peer_send(Peer, 0, Packet);
-
 }
 
 void Disconnect()
