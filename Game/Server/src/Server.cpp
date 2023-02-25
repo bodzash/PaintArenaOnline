@@ -2,7 +2,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cmath>
-#include <map>
+#include <cstring>
 #include "mingw.thread.h"
 
 #include "enet/enet.h"
@@ -48,6 +48,24 @@ struct NetId
   int Id;
 };
 
+struct PlayerInput
+{
+  bool Left;
+  bool Right;
+  bool Up;
+  bool Down;
+};
+
+struct Command
+{
+  uint8_t Id = 0;
+  bool Left;
+  bool Right;
+  bool Up;
+  bool Down;
+};
+
+
 void NormalizeVector(float& x, float& y)
 {
   float m = std::max(sqrtf(x * x + y * y), 1.0f);
@@ -67,7 +85,6 @@ float Approach(float Start, float End, float Shift)
   }
 }
 
-/*
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 {
   auto View = Scene.view<Position, Velocity, Speed>();
@@ -88,22 +105,69 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
     Vel.x = Approach(Vel.x, 0.0f, Spd.Deceleration);
     Vel.y = Approach(Vel.y, 0.0f, Spd.Deceleration);
 
+    //std::cout << "x: " << Pos.x << " y: " << Pos.y << "\n";
   }
 }
-*/
+
+void InputToMovementSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<PlayerInput, Velocity, Speed>();
+  for (auto Entity : View)
+  {
+    auto& Inp = Scene.get<PlayerInput>(Entity);
+    auto& Vel = View.get<Velocity>(Entity);
+    auto& Spd = View.get<Speed>(Entity);
+
+    // Input will serve as impulse force
+    float InputX = Inp.Right - Inp.Left;
+    float InputY = Inp.Down - Inp.Up;
+
+    // Apply impulse force to velocity
+    Vel.x += InputX * std::min(Spd.Acceleration, Spd.MaxSpeed - abs(Vel.x));
+    Vel.y += InputY * std::min(Spd.Acceleration, Spd.MaxSpeed - abs(Vel.y));;
+  }
+}
+
+void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player, Command* Cmd)
+{
+  auto& Inp = Scene.get<PlayerInput>(Player);
+
+  Inp.Down = Cmd->Down;
+  Inp.Up = Cmd->Up;
+  Inp.Left = Cmd->Left;
+  Inp.Right = Cmd->Right;
+}
+
+void ResetPlayerInputSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<PlayerInput>();
+  for (auto Entity : View)
+  {
+    auto& Inp = View.get<PlayerInput>(Entity);
+
+    Inp = PlayerInput();
+  }
+}
+
+entt::entity CreatePlayer(entt::registry& Scene, int NetworkId)
+{
+  entt::entity Player = Scene.create();
+  Scene.emplace<NetId>(Player, NetworkId);
+  Scene.emplace<PlayerInput>(Player);
+  Scene.emplace<Position>(Player, 40.0f, 32.0f);
+  Scene.emplace<Velocity>(Player);
+  Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
+
+  return Player;
+}
 
 int main()
 {
   entt::registry Scene;
 
-  // Test entity
-  entt::entity Player = Scene.create();
-  Scene.emplace<NetId>(Player, 0);
-  Scene.emplace<Position>(Player, 40.0f, 32.0f);
-  Scene.emplace<Velocity>(Player);
-  Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
+  uint8_t CurrentNetworkId = 0;
+  entt::entity NetworkClients[5];
   
-
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
 
   ENetHost* Server;
@@ -120,7 +184,7 @@ int main()
   // Server Game Loop
   while (true)
   {
-    // Maintain 60 FPS
+    // Timing bs
     a = std::chrono::system_clock::now();
     std::chrono::duration<double, std::milli> work_time = a - b;
 
@@ -142,23 +206,46 @@ int main()
       switch(Event.type)
       {
       case ENET_EVENT_TYPE_CONNECT:
+        {
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
-
         std::cout << "Peer: " << Event.peer << "\n";
 
+        NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
+        Event.peer->data = &NetworkClients[CurrentNetworkId];
+        CurrentNetworkId++;
+
+        std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
+
         Broadcast(Server);
+        }
         break;
 
       case ENET_EVENT_TYPE_RECEIVE:
-        std::cout << "Message: " << Event.packet->data << "\n";
+        {
         std::cout << "Peer: " << Event.peer << "\n";
-        //std::cout << "Packet: " << Event.packet << "\n";
 
-        int x = (320 >> 8) & 0xff;
+        uint32_t PeerData = *(uint32_t*)Event.peer->data;
+
+        uint8_t PacketHeader;
+        memmove(&PacketHeader, Event.packet->data, 1);
         
-        std::cout << "First byte: " << "\n";
+        //std::cout << "Header: " << (int)PacketHeader << "\n";
+        //std::cout << "Peer Data: " << PeerData << "\n";
+
+        if (PacketHeader == 0)
+        {
+          Command* Cmd = (Command*)Event.packet->data;
+          ApplyNetworkInputToPlayer(Scene, (entt::entity)PeerData, Cmd);
+          /*
+          std::cout << "right: " << Cmd->Right << "\n";
+          std::cout << "left: " << Cmd->Left << "\n";
+          std::cout << "up: " << Cmd->Up << "\n";
+          std::cout << "down: " << Cmd->Down << "\n";
+          */
+        }
 
         enet_packet_destroy(Event.packet);
+        }
         break;
 
       case ENET_EVENT_TYPE_DISCONNECT:
@@ -167,9 +254,13 @@ int main()
       }
     }
 
-    // Update
-    //DynamicMovementSystem(DeltaTime, Scene);
-    if (GetKeyState('A')) return 1;
+    // Update loop
+    InputToMovementSystem(Scene);
+    DynamicMovementSystem(DeltaTime, Scene);
+    ResetPlayerInputSystem(Scene);
+
+    // For fast shutdown
+    if (GetKeyState(VK_SPACE)) return 1;
 
     //std::cout << DeltaTime << "\n";
   }

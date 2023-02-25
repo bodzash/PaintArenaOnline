@@ -10,7 +10,7 @@ ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
 
-void Connect()
+void ConnectToServer()
 {
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
 
@@ -24,7 +24,7 @@ void Connect()
   if (Peer == NULL) std::cout << "No available peer to initiate connection" << "\n";
 }
 
-void PollNet()
+void PollNet(entt::registry& Scene)
 {
   while(enet_host_service(Client, &Event, 0) > 0)
   {
@@ -37,6 +37,8 @@ void PollNet()
     case ENET_EVENT_TYPE_RECEIVE:
       std::cout << Event.packet->data << "\n";
 
+
+
       enet_packet_destroy(Event.packet);
       break;
     }
@@ -45,7 +47,11 @@ void PollNet()
 
 struct Command
 {
-  
+  uint8_t Id = 0;
+  bool Left;
+  bool Right;
+  bool Up;
+  bool Down;
 };
 
 void SendPacket()
@@ -54,6 +60,16 @@ void SendPacket()
   ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
     ENET_PACKET_FLAG_RELIABLE);
   enet_peer_send(Peer, 0, Packet);
+}
+
+void SendMovement(bool Left, bool Right, bool Up, bool Down)
+{
+  Command Msg = { 0, Left, Right, Up, Down };
+
+  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+
+  enet_peer_send(Peer, 0, Packet);
+
 }
 
 void Disconnect()

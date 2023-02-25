@@ -4,27 +4,65 @@
 
 #include "Net.h"
 
-entt::registry Registry;
+struct Position
+{
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
+struct Velocity
+{
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
+struct Speed
+{
+  float MaxSpeed = 0.0f;
+  float Acceleration = 0.0f;
+  float Deceleration = 0.0f;
+};
+
+struct NetId
+{
+  int Id;
+};
+
+void SpriteRendererSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+
+    DrawCircle(Pos.x, Pos.y, 16.0f, RED);
+  }
+}
 
 int main(void)
 {
-  const int screenWidth = 800;
-  const int screenHeight = 450;
+  entt::registry Scene;
 
-  InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+  InitWindow(640, 480, "Game Client");
   SetTargetFPS(60);
 
-  Connect();
+  ConnectToServer();
   
   while (!WindowShouldClose())
   {
-    PollNet();
+    PollNet(Scene);
 
-    if (IsKeyPressed(KEY_SPACE)) SendPacket();
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S))
+    {
+      SendMovement(IsKeyDown(KEY_A), IsKeyDown(KEY_D),
+        IsKeyDown(KEY_W), IsKeyDown(KEY_S));
+    }
 
     BeginDrawing();
-      ClearBackground(RAYWHITE);
-      DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+    ClearBackground({167, 167, 167, 255});
+
+    SpriteRendererSystem(Scene);
+    
     EndDrawing();
   }
   CloseWindow();
