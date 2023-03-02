@@ -3,10 +3,13 @@
 #include <cstdint>
 #include <cmath>
 #include <cstring>
-#include "mingw.thread.h"
 
+#include "mingw.thread.h"
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
+
+#include "Math.hpp"
+#include "Components.hpp"
 
 using std::string;
 
@@ -22,9 +25,14 @@ void Broadcast(ENetHost* Server)
   ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
     ENET_PACKET_FLAG_RELIABLE);
   enet_host_broadcast(Server, 0, Packet);
-
-  //enet_packet_destroy(Packet);
 }
+
+struct RemotePeer
+{
+  int Id;
+  int NetworkId;
+  bool bActive;
+};
 
 struct PlayerUpdate
 {
@@ -34,66 +42,22 @@ struct PlayerUpdate
   float y;
 };
 
-struct Position
-{
-  float x = 0.0f;
-  float y = 0.0f;
-};
-
-struct Velocity
-{
-  float x = 0.0f;
-  float y = 0.0f;
-};
-
-struct Speed
-{
-  float MaxSpeed = 0.0f;
-  float Acceleration = 0.0f;
-  float Deceleration = 0.0f;
-};
-
-struct NetId
-{
-  int Id;
-};
-
 struct PlayerInput
 {
-  bool Left;
-  bool Right;
-  bool Up;
-  bool Down;
+  bool bLeft;
+  bool bRight;
+  bool bUp;
+  bool bDown;
 };
 
 struct Command
 {
   uint8_t Id = 0;
-  bool Left;
-  bool Right;
-  bool Up;
-  bool Down;
+  bool bLeft;
+  bool bRight;
+  bool bUp;
+  bool bDown;
 };
-
-
-void NormalizeVector(float& x, float& y)
-{
-  float m = std::max(sqrtf(x * x + y * y), 1.0f);
-  x /= m;
-  y /= m;
-}
-
-float Approach(float Start, float End, float Shift)
-{
-  if (Start < End)
-  {
-    return std::min(Start + Shift, End);
-  }
-  else
-  {
-    return std::max(Start - Shift, End);
-  }
-}
 
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 {
@@ -114,8 +78,6 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 
     Vel.x = Approach(Vel.x, 0.0f, Spd.Deceleration);
     Vel.y = Approach(Vel.y, 0.0f, Spd.Deceleration);
-
-    //std::cout << "x: " << Pos.x << " y: " << Pos.y << "\n";
   }
 }
 
@@ -129,8 +91,8 @@ void InputToMovementSystem(entt::registry& Scene)
     auto& Spd = View.get<Speed>(Entity);
 
     // Input will serve as impulse force
-    float InputX = Inp.Right - Inp.Left;
-    float InputY = Inp.Down - Inp.Up;
+    float InputX = Inp.bRight - Inp.bLeft;
+    float InputY = Inp.bDown - Inp.bUp;
 
     // Apply impulse force to velocity
     Vel.x += InputX * std::min(Spd.Acceleration, Spd.MaxSpeed - abs(Vel.x));
@@ -142,10 +104,10 @@ void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player, Comma
 {
   auto& Inp = Scene.get<PlayerInput>(Player);
 
-  Inp.Down = Cmd->Down;
-  Inp.Up = Cmd->Up;
-  Inp.Left = Cmd->Left;
-  Inp.Right = Cmd->Right;
+  Inp.bDown = Cmd->bDown;
+  Inp.bUp = Cmd->bUp;
+  Inp.bLeft = Cmd->bLeft;
+  Inp.bRight = Cmd->bRight;
 }
 
 void ResetPlayerInputSystem(entt::registry& Scene)
@@ -175,11 +137,10 @@ int main()
 {
   entt::registry Scene;
 
-  uint8_t CurrentNetworkId = 0;
+  uint8_t NumberOfClients = 0;
   entt::entity NetworkClients[5];
 
-  NetworkClients[0] = CreatePlayer(Scene, CurrentNetworkId);
-  NetworkClients[1] = CreatePlayer(Scene, CurrentNetworkId++);
+  NetworkClients[0] = CreatePlayer(Scene, NumberOfClients);
   
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
 
@@ -189,6 +150,7 @@ int main()
   Address.host = ENET_HOST_ANY;
   Address.port = 7777;
 
+  // Todo clean this mess
   Server = enet_host_create(&Address, 32, 1, 0, 0);
   if (Server == NULL) std::cout << "Error when trying to create server host" << "\n";
 
@@ -197,7 +159,7 @@ int main()
   // Server Game Loop
   while (true)
   {
-    // Timing bs
+    // Timing bs TODO CLEANUP
     a = std::chrono::system_clock::now();
     std::chrono::duration<double, std::milli> work_time = a - b;
 
@@ -219,14 +181,14 @@ int main()
       switch(Event.type)
       {
       case ENET_EVENT_TYPE_CONNECT:
-        {
+      {
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
         // Send something to the currently connected peer
-        string Msg = "W";
-        ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1, 1);
-        enet_peer_send(Event.peer, 0, Packet);
+        //string Msg = "W";
+        //ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1, 1);
+        //enet_peer_send(Event.peer, 0, Packet);
 
         //NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
         //Event.peer->data = &NetworkClients[CurrentNetworkId];
@@ -234,10 +196,10 @@ int main()
 
         //std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
         }
-        break;
+      break;
 
       case ENET_EVENT_TYPE_RECEIVE:
-        {
+      {
         //uint32_t PeerData = *(uint32_t*)Event.peer->data;
         uint8_t PacketHeader;
         memmove(&PacketHeader, Event.packet->data, 1);
@@ -254,34 +216,37 @@ int main()
         }
 
         enet_packet_destroy(Event.packet);
-        }
-        break;
+      }
+      break;
 
       case ENET_EVENT_TYPE_DISCONNECT:
+      {
         std::cout << "Client disconnected" << "\n"; 
-        break;
+      }
+      break;
       }
     }
 
     // Update loop
     InputToMovementSystem(Scene);
-    DynamicMovementSystem(/*DeltaTime*/ 0.016f, Scene);
+    DynamicMovementSystem(DeltaTime, Scene);
     ResetPlayerInputSystem(Scene);
 
+    // Move this shit TODO Cleanup
     auto& Pos = Scene.get<Position>(NetworkClients[0]);
     PlayerUpdate Msg = { 0, 0, Pos.x, Pos.y };
     ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
     enet_host_broadcast(Server, 0, Packet);
     
     // For fast shutdown
-    if (GetKeyState(VK_SPACE)) return 1;
-
-    //std::cout << DeltaTime << "\n";
+    if (GetKeyState(VK_SPACE)) return 1; // TODO Remove this
   }
 
   // Cleanup
   enet_host_destroy(Server);
+  enet_deinitialize();
 }
+
 
 /*
 int main()

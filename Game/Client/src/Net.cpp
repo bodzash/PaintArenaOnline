@@ -1,7 +1,7 @@
 #include <iostream>
 #include "enet/enet.h"
 
-#include "Net.h"
+#include "Net.hpp"
 
 using std::string;
 
