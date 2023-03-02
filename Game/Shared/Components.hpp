@@ -24,3 +24,11 @@ struct NetId
 {
   int Id;
 };
+
+struct PlayerInput
+{
+  bool bLeft;
+  bool bRight;
+  bool bUp;
+  bool bDown;
+};

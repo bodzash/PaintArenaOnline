@@ -16,6 +16,7 @@ if(IS_CLIENT)
   add_subdirectory(External/enet)
 
   target_include_directories(${PROJECT_NAME}
+    PUBLIC Shared
     PUBLIC Client/include
     PUBLIC External/raylib/src
     PUBLIC External/entt/src
@@ -36,6 +37,7 @@ else()
   add_subdirectory(External/mingw-std-threads)
 
   target_include_directories(${PROJECT_NAME}
+    PUBLIC Shared
     PUBLIC Server/include
     PUBLIC External/entt/src
     PUBLIC External/enet/include

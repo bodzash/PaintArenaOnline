@@ -56,7 +56,7 @@ void PollNet(entt::registry& Scene)
     case ENET_EVENT_TYPE_RECEIVE:
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
-      //std::cout << "Header: " << (int)PacketHeader << "\n";
+      std::cout << "Header: " << (int)PacketHeader << "\n";
 
       if (PacketHeader == 0)
       {

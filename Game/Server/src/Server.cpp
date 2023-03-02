@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cmath>
 #include <cstring>
+#include <array>
 
 #include "mingw.thread.h"
 #include "enet/enet.h"
@@ -32,6 +33,7 @@ struct RemotePeer
   int Id;
   int NetworkId;
   bool bActive;
+  ENetPeer* pPeer;
 };
 
 struct PlayerUpdate
@@ -40,14 +42,6 @@ struct PlayerUpdate
   uint8_t NetworkId;
   float x;
   float y;
-};
-
-struct PlayerInput
-{
-  bool bLeft;
-  bool bRight;
-  bool bUp;
-  bool bDown;
 };
 
 struct Command
@@ -133,14 +127,19 @@ entt::entity CreatePlayer(entt::registry& Scene, int NetworkId)
   return Player;
 }
 
+void Placeholder()
+{
+  //
+}
+
 int main()
 {
   entt::registry Scene;
 
-  uint8_t NumberOfClients = 0;
-  entt::entity NetworkClients[5];
+  const int MaxNetworkClients = 6;
+  std::array<RemotePeer, MaxNetworkClients> NetworkClients;
 
-  NetworkClients[0] = CreatePlayer(Scene, NumberOfClients);
+  CreatePlayer(Scene, 0);
   
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
 
@@ -185,15 +184,13 @@ int main()
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
+        //Event.peer->data = &NetworkClients[0];
+
         // Send something to the currently connected peer
-        //string Msg = "W";
-        //ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1, 1);
-        //enet_peer_send(Event.peer, 0, Packet);
-
-        //NetworkClients[CurrentNetworkId] = CreatePlayer(Scene, CurrentNetworkId);
-        //Event.peer->data = &NetworkClients[CurrentNetworkId];
-        //CurrentNetworkId++;
-
+        uint8_t Msg[2] = {0, 0};
+        ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+        enet_peer_send(Event.peer, 0, Packet);
+        
         //std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
         }
       break;
@@ -211,8 +208,7 @@ int main()
         if (PacketHeader == 0)
         {
           Command* Cmd = (Command*)Event.packet->data;
-          /*(entt::entity)PeerData*/
-          ApplyNetworkInputToPlayer(Scene, NetworkClients[0], Cmd);
+          ApplyNetworkInputToPlayer(Scene, /*NetworkClients[0]*/(entt::entity)0, Cmd);
         }
 
         enet_packet_destroy(Event.packet);
@@ -233,10 +229,12 @@ int main()
     ResetPlayerInputSystem(Scene);
 
     // Move this shit TODO Cleanup
-    auto& Pos = Scene.get<Position>(NetworkClients[0]);
+    /*
+    auto& Pos = Scene.get<Position>((entt::entity)0);
     PlayerUpdate Msg = { 0, 0, Pos.x, Pos.y };
     ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
     enet_host_broadcast(Server, 0, Packet);
+    */
     
     // For fast shutdown
     if (GetKeyState(VK_SPACE)) return 1; // TODO Remove this

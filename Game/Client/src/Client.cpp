@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
@@ -64,9 +65,7 @@ int main(void)
 
     BeginDrawing();
     ClearBackground({167, 167, 167, 255});
-
     SpriteRendererSystem(Scene);
-    
     EndDrawing();
   }
   CloseWindow();
