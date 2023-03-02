@@ -10,14 +10,14 @@ if(IS_CLIENT)
 
   project(Client)
 
-  add_executable(${PROJECT_NAME} Client/src/Client.cpp Client/src/Net.cpp)
+  add_executable(${PROJECT_NAME} Client/Source/Client.cpp Client/Source/Net.cpp)
 
   add_subdirectory(External/raylib)
   add_subdirectory(External/enet)
 
   target_include_directories(${PROJECT_NAME}
     PUBLIC Shared
-    PUBLIC Client/include
+    PUBLIC Client/Include
     PUBLIC External/raylib/src
     PUBLIC External/entt/src
     PUBLIC External/enet/include
@@ -31,14 +31,14 @@ else()
 
   project(Server)
 
-  add_executable(${PROJECT_NAME} Server/src/Server.cpp)
+  add_executable(${PROJECT_NAME} Server/Source/Server.cpp)
 
   add_subdirectory(External/enet)
   add_subdirectory(External/mingw-std-threads)
 
   target_include_directories(${PROJECT_NAME}
     PUBLIC Shared
-    PUBLIC Server/include
+    PUBLIC Server/Include
     PUBLIC External/entt/src
     PUBLIC External/enet/include
     PUBLIC External/mingw_stdthreads

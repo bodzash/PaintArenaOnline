@@ -2,6 +2,7 @@
 #include "enet/enet.h"
 
 #include "Net.hpp"
+#include "Components.hpp"
 
 using std::string;
 
@@ -10,23 +11,21 @@ ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
 
-struct Position
-{
-  float x = 0.0f;
-  float y = 0.0f;
-};
-
-struct NetId
-{
-  int Id;
-};
-
 struct PlayerUpdate
 {
   uint8_t Id;
   uint8_t NetworkId;
   float x;
   float y;
+};
+
+struct Command
+{
+  uint8_t Id = 0;
+  bool Left;
+  bool Right;
+  bool Up;
+  bool Down;
 };
 
 void ConnectToServer()
@@ -50,16 +49,20 @@ void PollNet(entt::registry& Scene)
     switch(Event.type)
     {
     case ENET_EVENT_TYPE_CONNECT:
+    {
       std::cout << "Connection event recieved, chief o7" << "\n"; 
-      break;
+    }
+    break;
 
     case ENET_EVENT_TYPE_RECEIVE:
+    {
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
       std::cout << "Header: " << (int)PacketHeader << "\n";
 
       if (PacketHeader == 0)
       {
+        /*
         PlayerUpdate* Msg = (PlayerUpdate*)Event.packet->data;
 
         auto View = Scene.view<NetId, Position>();
@@ -74,22 +77,16 @@ void PollNet(entt::registry& Scene)
             Pos.y = Msg->y;
           }
         }
+        */
       }
 
       enet_packet_destroy(Event.packet);
-      break;
+    }
+    break;
+    
     }
   }
 }
-
-struct Command
-{
-  uint8_t Id = 0;
-  bool Left;
-  bool Right;
-  bool Up;
-  bool Down;
-};
 
 void SendPacket()
 {

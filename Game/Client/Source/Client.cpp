@@ -4,30 +4,7 @@
 #include "entt/entity/registry.hpp"
 
 #include "Net.hpp"
-
-struct Position
-{
-  float x = 0.0f;
-  float y = 0.0f;
-};
-
-struct Velocity
-{
-  float x = 0.0f;
-  float y = 0.0f;
-};
-
-struct Speed
-{
-  float MaxSpeed = 0.0f;
-  float Acceleration = 0.0f;
-  float Deceleration = 0.0f;
-};
-
-struct NetId
-{
-  int Id;
-};
+#include "Components.hpp"
 
 void SpriteRendererSystem(entt::registry& Scene)
 {
@@ -46,7 +23,7 @@ int main(void)
 
   entt::entity Player = Scene.create();
   Scene.emplace<NetId>(Player, 0);
-  Scene.emplace<Position>(Player, 0, 0);
+  Scene.emplace<Position>(Player, 0.0f, 0.0f);
 
   InitWindow(640, 480, "Game Client");
   SetTargetFPS(60);
