@@ -10,7 +10,10 @@ if(IS_CLIENT)
 
   project(Client)
 
-  add_executable(${PROJECT_NAME} Client/Source/Client.cpp Client/Source/Net.cpp)
+  add_executable(${PROJECT_NAME}
+    Client/Source/Client.cpp
+    Client/Source/NetWork.cpp
+  )
 
   add_subdirectory(External/raylib)
   add_subdirectory(External/enet)

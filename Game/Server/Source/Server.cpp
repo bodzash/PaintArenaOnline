@@ -13,27 +13,14 @@
 #include "Components.hpp"
 
 using std::string;
-
-std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
-std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
-
-const float FrameRate = 1000 / 60;
-float DeltaTime = 0.016f;
-
-void Broadcast(ENetHost* Server)
-{
-  string Msg = "Sup from the Server";
-  ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
-    ENET_PACKET_FLAG_RELIABLE);
-  enet_host_broadcast(Server, 0, Packet);
-}
+using namespace std::chrono;
 
 struct RemotePeer
 {
-  int Id;
-  int NetworkId;
-  bool bActive;
-  ENetPeer* pPeer;
+  entt::entity Id = (entt::entity)0;
+  int NetworkId = 0;
+  bool bActive = false;
+  ENetPeer* pPeer = nullptr;
 };
 
 struct PlayerUpdate
@@ -42,15 +29,6 @@ struct PlayerUpdate
   uint8_t NetworkId;
   float x;
   float y;
-};
-
-struct Command
-{
-  uint8_t Id = 0;
-  bool bLeft;
-  bool bRight;
-  bool bUp;
-  bool bDown;
 };
 
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
@@ -94,14 +72,16 @@ void InputToMovementSystem(entt::registry& Scene)
   }
 }
 
-void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player, Command* Cmd)
+void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player)
 {
   auto& Inp = Scene.get<PlayerInput>(Player);
 
+  /*
   Inp.bDown = Cmd->bDown;
   Inp.bUp = Cmd->bUp;
   Inp.bLeft = Cmd->bLeft;
   Inp.bRight = Cmd->bRight;
+  */
 }
 
 void ResetPlayerInputSystem(entt::registry& Scene)
@@ -127,55 +107,52 @@ entt::entity CreatePlayer(entt::registry& Scene, int NetworkId)
   return Player;
 }
 
-void Placeholder()
-{
-  //
-}
-
 int main()
 {
   entt::registry Scene;
 
+  const float FrameRate = 1000 / 60;
+  float DeltaTime = 0.016f;
+  system_clock::time_point TimeStart = system_clock::now();
+  system_clock::time_point TimeEnd = system_clock::now();  
+
   const int MaxNetworkClients = 6;
   std::array<RemotePeer, MaxNetworkClients> NetworkClients;
-
-  CreatePlayer(Scene, 0);
   
-  if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
-
-  ENetHost* Server;
+  ENetHost* pServer;
   ENetAddress Address;
   ENetEvent Event;
   Address.host = ENET_HOST_ANY;
   Address.port = 7777;
 
   // Todo clean this mess
-  Server = enet_host_create(&Address, 32, 1, 0, 0);
-  if (Server == NULL) std::cout << "Error when trying to create server host" << "\n";
+  if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
+  pServer = enet_host_create(&Address, 32, 1, 0, 0);
+  if (pServer == NULL) std::cout << "Error when trying to create pServer host" << "\n";
 
-  std::cout << "GameServer Started" << "\n";
+  std::cout << "Game Server Started" << "\n";
 
-  // Server Game Loop
+  // pServer Game Loop
   while (true)
   {
-    // Timing bs TODO CLEANUP
-    a = std::chrono::system_clock::now();
-    std::chrono::duration<double, std::milli> work_time = a - b;
+    // Delta timing and thread sleeping
+    TimeStart = system_clock::now();
+    duration<float, std::milli> WorkTime = TimeStart - TimeEnd;
 
-    if (work_time.count() < FrameRate)
+    if (WorkTime.count() < FrameRate)
     {
-      std::chrono::duration<double, std::milli> delta_ms(FrameRate - work_time.count());
-      std::chrono::milliseconds delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
-      std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+      duration<float, std::milli> DeltaMs(FrameRate - WorkTime.count());
+      milliseconds DeltaMsDuration = duration_cast<milliseconds>(DeltaMs);
+      std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
     }
 
-    b = std::chrono::system_clock::now();
-    std::chrono::duration<double, std::milli> sleep_time = b - a;
+    TimeEnd = system_clock::now();
+    duration<float, std::milli> sleep_time = TimeEnd - TimeStart;
 
-    float DeltaTime = 1 / (1000 / (work_time + sleep_time).count());
+    DeltaTime = (1.0f / (1000.0f / (WorkTime + sleep_time).count()));
 
     // Network polling
-    while(enet_host_service(Server, &Event, 0) > 0)
+    while(enet_host_service(pServer, &Event, 0) > 0)
     {
       switch(Event.type)
       {
@@ -184,22 +161,42 @@ int main()
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
-        //Event.peer->data = &NetworkClients[0];
+        // Search for an empty slot
+        for(int i = 0; i < NetworkClients.size(); i++)
+        {
+          // Skip active slots
+          if (!NetworkClients[i].bActive)
+          {
+            // Empty slot is found, settle in
+            NetworkClients[i].NetworkId = i;
+            NetworkClients[i].bActive = true;
+            NetworkClients[i].Id = CreatePlayer(Scene, i);
 
-        // Send something to the currently connected peer
-        uint8_t Msg[2] = {0, 0};
-        ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-        enet_peer_send(Event.peer, 0, Packet);
-        
-        //std::cout << "Peer Data: " << *(uint32_t*)Event.peer->data << "\n";
+            // Send peer the self netid
+            uint8_t Msg[2] = {0, (uint8_t)i};
+            ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+            enet_peer_send(Event.peer, 0, Packet);
+
+            // Give id data to peer (enet bs)
+            Event.peer->data = &NetworkClients[i];
+            NetworkClients[i].pPeer = Event.peer;
+
+            RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
+            std::cout << "Peer Data: " << PeerData->NetworkId << "\n";
+            break;
+          }
         }
+
+        // If didnt found an empty slot GTFO
+        if (Event.peer->data == nullptr) enet_peer_disconnect(Event.peer, 0);
+      }
       break;
 
       case ENET_EVENT_TYPE_RECEIVE:
       {
-        //uint32_t PeerData = *(uint32_t*)Event.peer->data;
         uint8_t PacketHeader;
         memmove(&PacketHeader, Event.packet->data, 1);
+        RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
         
         //std::cout << "Peer: " << Event.peer << "\n";
         //std::cout << "Header: " << (int)PacketHeader << "\n";
@@ -207,8 +204,8 @@ int main()
 
         if (PacketHeader == 0)
         {
-          Command* Cmd = (Command*)Event.packet->data;
-          ApplyNetworkInputToPlayer(Scene, /*NetworkClients[0]*/(entt::entity)0, Cmd);
+          //Command* Cmd = (Command*)Event.packet->data;
+          ApplyNetworkInputToPlayer(Scene, PeerData->Id);
         }
 
         enet_packet_destroy(Event.packet);
@@ -217,7 +214,10 @@ int main()
 
       case ENET_EVENT_TYPE_DISCONNECT:
       {
-        std::cout << "Client disconnected" << "\n"; 
+        std::cout << "Client disconnected: " << Event.peer << "\n"; 
+        RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
+        PeerData->bActive = false;
+        PeerData->pPeer = nullptr;
       }
       break;
       }
@@ -227,45 +227,12 @@ int main()
     InputToMovementSystem(Scene);
     DynamicMovementSystem(DeltaTime, Scene);
     ResetPlayerInputSystem(Scene);
-
-    // Move this shit TODO Cleanup
-    /*
-    auto& Pos = Scene.get<Position>((entt::entity)0);
-    PlayerUpdate Msg = { 0, 0, Pos.x, Pos.y };
-    ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-    enet_host_broadcast(Server, 0, Packet);
-    */
     
     // For fast shutdown
     if (GetKeyState(VK_SPACE)) return 1; // TODO Remove this
   }
 
   // Cleanup
-  enet_host_destroy(Server);
+  enet_host_destroy(pServer);
   enet_deinitialize();
 }
-
-
-/*
-int main()
-{
-  using clock = std::chrono::steady_clock;
-  using time_point = std::chrono::_V2::steady_clock::time_point;
-
-  time_point next_frame = clock::now();
-
-  while(true)
-  {
-    // Time Start bullshit
-    next_frame += std::chrono::milliseconds(1000 / 60);
-
-    // Network Poll
-    // Update
-
-    std::cout << 0.016f << '\n';
-
-    // End of Frame
-    std::this_thread::sleep_until(next_frame);
-  }
-}
-*/
