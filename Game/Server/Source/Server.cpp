@@ -57,6 +57,16 @@ void InputToMovementSystem(entt::registry& Scene)
   }
 }
 
+void ResetPlayerInputSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<PlayerInput>();
+  for (auto Entity : View)
+  {
+    auto& Inp = View.get<PlayerInput>(Entity);
+    Inp = PlayerInput();
+  }
+}
+
 void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player)
 {
   auto& Inp = Scene.get<PlayerInput>(Player);
@@ -69,29 +79,20 @@ void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player)
   */
 }
 
-void ResetPlayerInputSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<PlayerInput>();
-  for (auto Entity : View)
-  {
-    auto& Inp = View.get<PlayerInput>(Entity);
-
-    Inp = PlayerInput();
-  }
-}
-
 entt::entity CreatePrefabPlayer(entt::registry& Scene, int NetworkId)
 {
   entt::entity Player = Scene.create();
   Scene.emplace<NetId>(Player, NetworkId);
+  Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
   Scene.emplace<Position>(Player, 40.0f, 32.0f);
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
-  Scene.emplace<Health>(Player, 0, 100);
 
   return Player;
 }
+
+// CreatePrefabBullet()
 
 int main()
 {
@@ -159,24 +160,24 @@ int main()
             NetworkClients[i].Id = CreatePrefabPlayer(Scene, i);
 
             // Send peer the self netid
-            uint8_t Msg[2] = {0, (uint8_t)i};
-            ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-            enet_peer_send(Event.peer, 0, Packet);
+            {
+              int8_t Msg[2] = {0, (uint8_t)i};
+              ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+              enet_peer_send(Event.peer, 0, Packet);
+            }
 
-            // Send every other peer info for looop
-            CreatePlayer Mssg = {1, 0, 100, 50.5f, 74.9f};
-            ENetPacket* Packett = enet_packet_create(&Mssg, sizeof(Mssg), 1);
-            enet_peer_send(Event.peer, 0, Packett);
+            // Send every other peer info FOOR LOOP HEEREE
+            {
+              CreatePlayer Msg = {1, 0, 59, 50.5f, 74.9f};
+              ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+              enet_peer_send(Event.peer, 0, Packet);
+            }
 
             // broadcast self creation
 
-            // Give id data to peer (enet bs)
+            // Give data to peer
             Event.peer->data = &NetworkClients[i];
             NetworkClients[i].pPeer = Event.peer;
-            /*
-            RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
-            std::cout << "Peer Data: " << PeerData->NetworkId << "\n";
-            */
             break;
           }
         }
@@ -199,7 +200,7 @@ int main()
         if (PacketHeader == 0)
         {
           //Command* Cmd = (Command*)Event.packet->data;
-          ApplyNetworkInputToPlayer(Scene, PeerData->Id);
+          //ApplyNetworkInputToPlayer(Scene, PeerData->Id);
         }
 
         enet_packet_destroy(Event.packet);

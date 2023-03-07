@@ -34,7 +34,8 @@ void PollNetwork(entt::registry& Scene)
     {
     case ENET_EVENT_TYPE_CONNECT:
     {
-      std::cout << "Connection event recieved, chief o7" << "\n"; 
+      std::cout << "Connection event recieved chief" << "\n";
+      //set bConnected to trueeee 
     }
     break;
 
@@ -43,12 +44,11 @@ void PollNetwork(entt::registry& Scene)
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
       std::cout << "Header: " << (int)PacketHeader << "\n";
-      //std::cout << "Msg: " << (int)Event.packet->data[1] << "\n";
-
 
       if (PacketHeader == 0)
       {
         std::cout << (int)Event.packet->data[1] << "\n";
+        // set self id to msg
       }
       else if (PacketHeader == 1)
       {
@@ -63,6 +63,13 @@ void PollNetwork(entt::registry& Scene)
       }
 
       enet_packet_destroy(Event.packet);
+    }
+    break;
+
+    case ENET_EVENT_TYPE_DISCONNECT:
+    {
+      std::cout << "Disconnect event recieved boss" << "\n";
+      //set bConnected to falseeeeee
     }
     break;
     }
