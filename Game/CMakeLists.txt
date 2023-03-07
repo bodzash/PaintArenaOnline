@@ -21,6 +21,7 @@ if(IS_CLIENT)
     PUBLIC External/raylib/src
     PUBLIC External/entt/src
     PUBLIC External/enet/include
+    PUBLIC External/imgui
   )
 
   target_link_directories(${PROJECT_NAME} PUBLIC raylib/raylib PUBLIC enet)
