@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
-#include "Net.hpp"
+#include "Network.hpp"
 #include "Components.hpp"
 
 void SpriteRendererSystem(entt::registry& Scene)
@@ -25,7 +25,7 @@ int main(void)
   Scene.emplace<NetId>(Player, 0);
   Scene.emplace<Position>(Player, 0.0f, 0.0f);
 
-  InitWindow(640, 480, "Game Client");
+  InitWindow(640, 480, "Marble Brawl");
   SetTargetFPS(60);
 
   ConnectToServer();
