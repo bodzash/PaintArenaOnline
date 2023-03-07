@@ -11,25 +11,10 @@
 
 #include "Math.hpp"
 #include "Components.hpp"
+#include "NetworkTypes.hpp"
 
 using std::string;
 using namespace std::chrono;
-
-struct RemotePeer
-{
-  entt::entity Id = (entt::entity)0;
-  int NetworkId = 0;
-  bool bActive = false;
-  ENetPeer* pPeer = nullptr;
-};
-
-struct PlayerUpdate
-{
-  uint8_t Id;
-  uint8_t NetworkId;
-  float x;
-  float y;
-};
 
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 {
@@ -95,7 +80,7 @@ void ResetPlayerInputSystem(entt::registry& Scene)
   }
 }
 
-entt::entity CreatePlayer(entt::registry& Scene, int NetworkId)
+entt::entity CreatePrefabPlayer(entt::registry& Scene, int NetworkId)
 {
   entt::entity Player = Scene.create();
   Scene.emplace<NetId>(Player, NetworkId);
@@ -103,6 +88,7 @@ entt::entity CreatePlayer(entt::registry& Scene, int NetworkId)
   Scene.emplace<Position>(Player, 40.0f, 32.0f);
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
+  Scene.emplace<Health>(Player, 0, 100);
 
   return Player;
 }
@@ -170,19 +156,27 @@ int main()
             // Empty slot is found, settle in
             NetworkClients[i].NetworkId = i;
             NetworkClients[i].bActive = true;
-            NetworkClients[i].Id = CreatePlayer(Scene, i);
+            NetworkClients[i].Id = CreatePrefabPlayer(Scene, i);
 
             // Send peer the self netid
             uint8_t Msg[2] = {0, (uint8_t)i};
             ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
             enet_peer_send(Event.peer, 0, Packet);
 
+            // Send every other peer info for looop
+            CreatePlayer Mssg = {1, 0, 100, 50.5f, 74.9f};
+            ENetPacket* Packett = enet_packet_create(&Mssg, sizeof(Mssg), 1);
+            enet_peer_send(Event.peer, 0, Packett);
+
+            // broadcast self creation
+
             // Give id data to peer (enet bs)
             Event.peer->data = &NetworkClients[i];
             NetworkClients[i].pPeer = Event.peer;
-
+            /*
             RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
             std::cout << "Peer Data: " << PeerData->NetworkId << "\n";
+            */
             break;
           }
         }

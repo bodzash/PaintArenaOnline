@@ -3,6 +3,7 @@
 
 #include "Network.hpp"
 #include "Components.hpp"
+#include "NetworkTypes.hpp"
 
 using std::string;
 
@@ -10,23 +11,6 @@ ENetAddress Address;
 ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
-
-struct PlayerUpdate
-{
-  uint8_t Id;
-  uint8_t NetworkId;
-  float x;
-  float y;
-};
-
-struct Command
-{
-  uint8_t Id = 0;
-  bool Left;
-  bool Right;
-  bool Up;
-  bool Down;
-};
 
 void ConnectToServer()
 {
@@ -42,7 +26,7 @@ void ConnectToServer()
   if (Peer == NULL) std::cout << "No available peer to initiate connection" << "\n";
 }
 
-void PollNet(entt::registry& Scene)
+void PollNetwork(entt::registry& Scene)
 {
   while(enet_host_service(Client, &Event, 0) > 0)
   {
@@ -59,31 +43,28 @@ void PollNet(entt::registry& Scene)
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
       std::cout << "Header: " << (int)PacketHeader << "\n";
+      //std::cout << "Msg: " << (int)Event.packet->data[1] << "\n";
+
 
       if (PacketHeader == 0)
       {
-        /*
-        PlayerUpdate* Msg = (PlayerUpdate*)Event.packet->data;
+        std::cout << (int)Event.packet->data[1] << "\n";
+      }
+      else if (PacketHeader == 1)
+      {
+        std::cout << "ajlenbojj" << "\n";
 
-        auto View = Scene.view<NetId, Position>();
-        for(auto Entity : View)
-        {
-          auto& Nid = Scene.get<NetId>(Entity);
-          auto& Pos = Scene.get<Position>(Entity);
+        CreatePlayer* Msg = (CreatePlayer*)Event.packet->data;
 
-          if (Nid.Id == (int)Msg->NetworkId)
-          {
-            Pos.x = Msg->x;
-            Pos.y = Msg->y;
-          }
-        }
-        */
+        entt::entity Player = Scene.create();
+        Scene.emplace<NetId>(Player, Msg->Nid);
+        Scene.emplace<Position>(Player, Msg->x, Msg->y);
+        Scene.emplace<Health>(Player, 0, 100, Msg->Health);
       }
 
       enet_packet_destroy(Event.packet);
     }
     break;
-    
     }
   }
 }
@@ -98,7 +79,7 @@ void SendPacket()
 
 void SendMovement(bool Left, bool Right, bool Up, bool Down)
 {
-  Command Msg = { 0, Left, Right, Up, Down };
+  ClientCommands Msg = { Left, Right, Up, Down };
 
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
 
@@ -108,4 +89,5 @@ void SendMovement(bool Left, bool Right, bool Up, bool Down)
 void Disconnect()
 {
   enet_peer_disconnect(Peer, 0);
+  enet_deinitialize();
 }

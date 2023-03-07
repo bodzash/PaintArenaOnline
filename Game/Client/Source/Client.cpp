@@ -1,10 +1,13 @@
 #include <iostream>
+#include <string>
 
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
 #include "Network.hpp"
 #include "Components.hpp"
+
+using std::string;
 
 void SpriteRendererSystem(entt::registry& Scene)
 {
@@ -17,22 +20,32 @@ void SpriteRendererSystem(entt::registry& Scene)
   }
 }
 
+void HealthRendererSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, Health>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Hel = View.get<Health>(Entity);
+
+    DrawText(std::to_string(Hel.Current).c_str(), Pos.x, Pos.y, 32, BLACK);
+  }
+}
+
 int main(void)
 {
   entt::registry Scene;
+  bool bConnected = false;
+  int SelfNetworkId = 0;
 
-  entt::entity Player = Scene.create();
-  Scene.emplace<NetId>(Player, 0);
-  Scene.emplace<Position>(Player, 0.0f, 0.0f);
-
-  InitWindow(640, 480, "Marble Brawl");
+  InitWindow(640, 480, "Marble Shooter");
   SetTargetFPS(60);
 
   ConnectToServer();
   
   while (!WindowShouldClose())
   {
-    PollNet(Scene);
+    PollNetwork(Scene);
 
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S))
     {
@@ -43,6 +56,7 @@ int main(void)
     BeginDrawing();
     ClearBackground({167, 167, 167, 255});
     SpriteRendererSystem(Scene);
+    HealthRendererSystem(Scene);
     EndDrawing();
   }
   CloseWindow();

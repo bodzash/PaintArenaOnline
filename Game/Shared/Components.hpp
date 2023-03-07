@@ -24,6 +24,13 @@ struct NetId
   int Id;
 };
 
+struct Health
+{
+  int Min = 0;
+  int Max = 100;
+  int Current = Max;
+};
+
 struct PlayerInput
 {
   bool bLeft;
