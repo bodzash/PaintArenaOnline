@@ -2,8 +2,10 @@
 
 #include "entt/entity/registry.hpp"
 
+bool IsConnected();
 void ConnectToServer();
 void PollNetwork(entt::registry& Scene);
 void SendPacket();
-void SendMovement(bool Left, bool Right, bool Up, bool Down);
+void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown);
 void Disconnect();
+void DeInitENet();

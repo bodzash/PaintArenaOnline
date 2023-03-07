@@ -21,7 +21,7 @@ struct Speed
 
 struct NetId
 {
-  int Id;
+  uint8_t Id;
 };
 
 struct Health

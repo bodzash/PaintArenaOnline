@@ -35,8 +35,6 @@ void HealthRendererSystem(entt::registry& Scene)
 int main(void)
 {
   entt::registry Scene;
-  bool bConnected = false;
-  int SelfNetworkId = 0;
 
   InitWindow(640, 480, "Marble Shooter");
   SetTargetFPS(60);
@@ -59,5 +57,7 @@ int main(void)
     HealthRendererSystem(Scene);
     EndDrawing();
   }
+
+  DeInitENet();
   CloseWindow();
 }

@@ -12,6 +12,17 @@ ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
 
+const int MaxNetworkClients = 6;
+std::array<RemotePeer, MaxNetworkClients> NetworkClients;
+
+bool bConnected = false;
+uint8_t SelfNetworkId = 0;
+
+bool IsConnected()
+{
+  return bConnected;
+}
+
 void ConnectToServer()
 {
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
@@ -35,7 +46,9 @@ void PollNetwork(entt::registry& Scene)
     case ENET_EVENT_TYPE_CONNECT:
     {
       std::cout << "Connection event recieved chief" << "\n";
-      //set bConnected to trueeee 
+      
+      // Set connection state
+      bConnected = true;
     }
     break;
 
@@ -47,19 +60,38 @@ void PollNetwork(entt::registry& Scene)
 
       if (PacketHeader == 0)
       {
-        std::cout << (int)Event.packet->data[1] << "\n";
-        // set self id to msg
+        OnConnection* Msg = (OnConnection*)Event.packet->data;
+        
+        // Set our self id
+        SelfNetworkId = Msg->Nid;
       }
       else if (PacketHeader == 1)
       {
-        std::cout << "ajlenbojj" << "\n";
-
         CreatePlayer* Msg = (CreatePlayer*)Event.packet->data;
 
+        // Create player
         entt::entity Player = Scene.create();
         Scene.emplace<NetId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
+
+        // Handle slot
+        NetworkClients[Msg->Nid].Id = Player;
+        NetworkClients[Msg->Nid].NetworkId = Msg->Nid;
+        NetworkClients[Msg->Nid].bActive = true;
+      }
+      else if (PacketHeader == 2)
+      {
+        DeletePlayer* Msg = (DeletePlayer*)Event.packet->data;
+
+        // If no such player just gtfo
+        if (NetworkClients[Msg->Nid].bActive == false) break;
+
+        // Remove entity
+        Scene.destroy(NetworkClients[Msg->Nid].Id);
+
+        // Handle slot
+        NetworkClients[Msg->Nid].bActive = false;
       }
 
       enet_packet_destroy(Event.packet);
@@ -69,7 +101,9 @@ void PollNetwork(entt::registry& Scene)
     case ENET_EVENT_TYPE_DISCONNECT:
     {
       std::cout << "Disconnect event recieved boss" << "\n";
-      //set bConnected to falseeeeee
+
+      // Set connection state
+      bConnected = false;
     }
     break;
     }
@@ -84,9 +118,9 @@ void SendPacket()
   enet_peer_send(Peer, 0, Packet);
 }
 
-void SendMovement(bool Left, bool Right, bool Up, bool Down)
+void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown)
 {
-  ClientCommands Msg = { Left, Right, Up, Down };
+  ClientCommands Msg = { bLeft, bRight, bUp, bDown };
 
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
 
@@ -96,5 +130,9 @@ void SendMovement(bool Left, bool Right, bool Up, bool Down)
 void Disconnect()
 {
   enet_peer_disconnect(Peer, 0);
+}
+
+void DeInitENet()
+{
   enet_deinitialize();
 }

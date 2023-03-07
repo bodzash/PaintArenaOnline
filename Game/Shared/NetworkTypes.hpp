@@ -9,7 +9,7 @@
 struct RemotePeer
 {
   entt::entity Id = (entt::entity)0;
-  int NetworkId = 0;
+  uint8_t NetworkId = 0;
   bool bActive = false;
   ENetPeer* pPeer = nullptr;
 };
@@ -17,10 +17,10 @@ struct RemotePeer
 // Client To Server Messages
 struct ClientCommands
 {
-  bool Left;
-  bool Right;
-  bool Up;
-  bool Down;
+  bool bLeft;
+  bool bRight;
+  bool bUp;
+  bool bDown;
 };
 
 // Server To Client Messages

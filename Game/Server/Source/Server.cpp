@@ -67,25 +67,24 @@ void ResetPlayerInputSystem(entt::registry& Scene)
   }
 }
 
-void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player)
+void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player,
+  ClientCommands* Cmd)
 {
   auto& Inp = Scene.get<PlayerInput>(Player);
 
-  /*
   Inp.bDown = Cmd->bDown;
   Inp.bUp = Cmd->bUp;
   Inp.bLeft = Cmd->bLeft;
   Inp.bRight = Cmd->bRight;
-  */
 }
 
-entt::entity CreatePrefabPlayer(entt::registry& Scene, int NetworkId)
+entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
 {
   entt::entity Player = Scene.create();
   Scene.emplace<NetId>(Player, NetworkId);
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
-  Scene.emplace<Position>(Player, 40.0f, 32.0f);
+  Scene.emplace<Position>(Player, 10.0f, 10.0f);
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
 
@@ -161,16 +160,20 @@ int main()
 
             // Send peer the self netid
             {
-              int8_t Msg[2] = {0, (uint8_t)i};
+              OnConnection Msg = {0, (uint8_t)i};
               ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
               enet_peer_send(Event.peer, 0, Packet);
             }
 
             // Send every other peer info FOOR LOOP HEEREE
             {
-              CreatePlayer Msg = {1, 0, 59, 50.5f, 74.9f};
+              auto& Pos = Scene.get<Position>(NetworkClients[i].Id);
+              auto& Hel = Scene.get<Health>(NetworkClients[i].Id);
+
+              CreatePlayer Msg = {1, (uint8_t)i, Hel.Current, Pos.x, Pos.y};
               ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-              enet_peer_send(Event.peer, 0, Packet);
+              //enet_peer_send(Event.peer, 0, Packet);
+              enet_host_broadcast(pServer, 0, Packet);
             }
 
             // broadcast self creation
@@ -197,10 +200,12 @@ int main()
         //std::cout << "Header: " << (int)PacketHeader << "\n";
         //std::cout << "Peer Data: " << PeerData << "\n";
 
+        if (!PeerData->bActive) break;
+        
         if (PacketHeader == 0)
         {
-          //Command* Cmd = (Command*)Event.packet->data;
-          //ApplyNetworkInputToPlayer(Scene, PeerData->Id);
+          ClientCommands* Cmd = (ClientCommands*)Event.packet->data;
+          ApplyNetworkInputToPlayer(Scene, PeerData->Id, Cmd);
         }
 
         enet_packet_destroy(Event.packet);
@@ -209,10 +214,17 @@ int main()
 
       case ENET_EVENT_TYPE_DISCONNECT:
       {
-        std::cout << "Client disconnected: " << Event.peer << "\n"; 
+        std::cout << "Client disconnected: " << Event.peer << "\n";
+
+        // Handle slot 
         RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
         PeerData->bActive = false;
         PeerData->pPeer = nullptr;
+
+        // Send out a disconnect
+        DeletePlayer Msg = {2, PeerData->NetworkId};
+        ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+        enet_host_broadcast(pServer, 0, Packet);
       }
       break;
       }
