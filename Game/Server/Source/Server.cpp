@@ -1,12 +1,9 @@
 #include <iostream>
 #include <chrono>
 #include <cstdint>
-#include <cmath>
-#include <cstring>
 #include <array>
 #include <thread>
 
-//#include "mingw.thread.h"
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
 
@@ -133,13 +130,11 @@ int main()
       duration<float, std::milli> DeltaMs(FrameRate - WorkTime.count());
       milliseconds DeltaMsDuration = duration_cast<milliseconds>(DeltaMs);
       std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
-
-      //std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
     }
 
     TimeEnd = system_clock::now();
     duration<float, std::milli> sleep_time = TimeEnd - TimeStart;
-
+    
     DeltaTime = (1.0f / (1000.0f / (WorkTime + sleep_time).count()));
 
     // Network polling

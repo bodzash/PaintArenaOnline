@@ -24,7 +24,6 @@ if(IS_CLIENT)
     PUBLIC External/raylib/src
     PUBLIC External/entt/src
     PUBLIC External/enet/include
-    PUBLIC External/imgui
   )
 
   target_link_directories(${PROJECT_NAME} PUBLIC raylib/raylib PUBLIC enet)
@@ -38,19 +37,17 @@ else()
   add_executable(${PROJECT_NAME} Server/Source/Server.cpp)
 
   add_subdirectory(External/enet)
-  add_subdirectory(External/mingw-std-threads)
 
   target_include_directories(${PROJECT_NAME}
     PUBLIC Shared
     PUBLIC Server/Include
     PUBLIC External/entt/src
     PUBLIC External/enet/include
-    PUBLIC External/mingw_stdthreads
   )
 
   target_link_directories(${PROJECT_NAME} PUBLIC enet)
 
-  target_link_libraries(${PROJECT_NAME} enet mingw_stdthreads)
+  target_link_libraries(${PROJECT_NAME} enet)
 
 endif(IS_CLIENT)
 unset(IS_CLIENT CACHE)

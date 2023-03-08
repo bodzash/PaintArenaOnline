@@ -1,9 +1,16 @@
 #pragma once
 
+#include <string>
+
 struct Position
 {
   float x = 0.0f;
   float y = 0.0f;
+};
+
+struct Sprite
+{
+  std::string Asset;
 };
 
 struct Velocity

@@ -4,6 +4,7 @@
 #include "Network.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
+#include "ClientTypes.hpp"
 
 using std::string;
 
@@ -74,6 +75,7 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<NetId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
+        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
 
         // Handle slot
         NetworkClients[Msg->Nid].Id = Player;
