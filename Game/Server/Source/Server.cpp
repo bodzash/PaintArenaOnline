@@ -4,8 +4,9 @@
 #include <cmath>
 #include <cstring>
 #include <array>
+#include <thread>
 
-#include "mingw.thread.h"
+//#include "mingw.thread.h"
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
 
@@ -84,7 +85,8 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
   Scene.emplace<NetId>(Player, NetworkId);
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
-  Scene.emplace<Position>(Player, 10.0f, 10.0f);
+  Scene.emplace<Position>(Player, 10.0f + RandomRange(0, 600),
+    10.0f + RandomRange(0, 460));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
 
@@ -103,6 +105,7 @@ int main()
   system_clock::time_point TimeEnd = system_clock::now();  
 
   const int MaxNetworkClients = 6;
+  int NetworkClientNumber = 0;
   std::array<RemotePeer, MaxNetworkClients> NetworkClients;
   
   ENetHost* pServer;
@@ -130,6 +133,8 @@ int main()
       duration<float, std::milli> DeltaMs(FrameRate - WorkTime.count());
       milliseconds DeltaMsDuration = duration_cast<milliseconds>(DeltaMs);
       std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
+
+      //std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
     }
 
     TimeEnd = system_clock::now();
@@ -147,6 +152,8 @@ int main()
         std::cout << "Client connected: " << Event.peer->address.host << "\n";
         std::cout << "Peer: " << Event.peer << "\n";
 
+        bool bFoundSlot = false;
+
         // Search for an empty slot
         for(int i = 0; i < NetworkClients.size(); i++)
         {
@@ -154,6 +161,9 @@ int main()
           if (!NetworkClients[i].bActive)
           {
             // Empty slot is found, settle in
+            bFoundSlot = true;
+            NetworkClientNumber++;
+
             NetworkClients[i].NetworkId = i;
             NetworkClients[i].bActive = true;
             NetworkClients[i].Id = CreatePrefabPlayer(Scene, i);
@@ -165,18 +175,30 @@ int main()
               enet_peer_send(Event.peer, 0, Packet);
             }
 
-            // Send every other peer info FOOR LOOP HEEREE
+            // Send every other peer info
+            for(int j = 0; j < NetworkClients.size(); j++)
+            {
+              // Make sure we arent sending ourselves yet
+              if (NetworkClients[j].bActive && NetworkClients[j].NetworkId != i)
+              {
+                auto& Pos = Scene.get<Position>(NetworkClients[j].Id);
+                auto& Hel = Scene.get<Health>(NetworkClients[j].Id);
+
+                CreatePlayer Msg = {1, (uint8_t)j, Hel.Current, Pos.x, Pos.y};
+                ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+                enet_peer_send(Event.peer, 0, Packet);
+              }
+            }
+
+            // Broadcast self creation
             {
               auto& Pos = Scene.get<Position>(NetworkClients[i].Id);
               auto& Hel = Scene.get<Health>(NetworkClients[i].Id);
 
               CreatePlayer Msg = {1, (uint8_t)i, Hel.Current, Pos.x, Pos.y};
               ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-              //enet_peer_send(Event.peer, 0, Packet);
               enet_host_broadcast(pServer, 0, Packet);
             }
-
-            // broadcast self creation
 
             // Give data to peer
             Event.peer->data = &NetworkClients[i];
@@ -185,8 +207,11 @@ int main()
           }
         }
 
+        std::cout << "Total: " << NetworkClientNumber << "\n";
+        std::cout << "Found: " << bFoundSlot << "\n";
+
         // If didnt found an empty slot GTFO
-        if (Event.peer->data == nullptr) enet_peer_disconnect(Event.peer, 0);
+        if (!bFoundSlot) enet_peer_disconnect(Event.peer, 0);
       }
       break;
 
@@ -215,6 +240,12 @@ int main()
       case ENET_EVENT_TYPE_DISCONNECT:
       {
         std::cout << "Client disconnected: " << Event.peer << "\n";
+
+        // If peer is non player just break
+        if (Event.peer->data == nullptr) break;
+
+        // Decrement total
+        NetworkClientNumber--;
 
         // Handle slot 
         RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
