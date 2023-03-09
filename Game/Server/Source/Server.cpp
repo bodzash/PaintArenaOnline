@@ -36,6 +36,33 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
   }
 }
 
+void KeepPlayerInBoundsSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, PlayerTag>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+
+    if (Pos.x < 0.0f)
+    {
+      Pos.x = 0.0f;
+    }
+    else if (Pos.x > 232.0f)
+    {
+      Pos.x = 232.0f;
+    }
+
+    if (Pos.y < 0.0f)
+    {
+      Pos.y = 0.0f;
+    }
+    else if (Pos.y > 168.0f)
+    {
+      Pos.y = 168.0f;
+    }  
+  }
+}
+
 void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
 {
   auto View = Scene.view<Position, Health, NetId>();
@@ -98,7 +125,7 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
   Scene.emplace<NetId>(Player, NetworkId);
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
-  Scene.emplace<Position>(Player, (float)RandomRange(0, 160), (float)RandomRange(0, 120));
+  Scene.emplace<Position>(Player, (float)RandomRange(0, 224), (float)RandomRange(0, 160));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<PlayerTag>(Player);
@@ -271,6 +298,8 @@ int main()
     // Update loop
     InputToMovementSystem(Scene);
     DynamicMovementSystem(DeltaTime, Scene);
+    KeepPlayerInBoundsSystem(Scene);
+
     ResetPlayerInputSystem(Scene);
 
     // Post Update

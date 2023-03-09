@@ -70,18 +70,20 @@ void HealthRendererSystem(entt::registry& Scene)
     auto& Pos = View.get<Position>(Entity);
     auto& Hel = View.get<Health>(Entity);
 
-    DrawText(std::to_string(Hel.Current).c_str(), Pos.x, Pos.y, 24, BLACK);
+    DrawText(std::to_string(Pos.x).c_str(), Pos.x + 12, Pos.y, 8, BLACK);
+    DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
+
   }
 }
 
 int main(void)
 {
-  const int ScreenWidth = 160;
-  const int ScreenHeight = 120;
-  int ScreenWindowRatio = 6;
+  const int ScreenWidth = 224;
+  const int ScreenHeight = 160;
+  const int WindowWidth = 960;
+  const int WindowHeight = 704;
 
-  InitWindow(ScreenWidth * ScreenWindowRatio, ScreenHeight * ScreenWindowRatio,
-    "Marble Shooter");
+  InitWindow(WindowWidth, WindowHeight, "Marble Shooter");
   SetTargetFPS(60);
 
   entt::registry Scene;
@@ -92,7 +94,7 @@ int main(void)
   MainCamera.target = {0.0f, 0.0f};
   MainCamera.offset = {0.0f, 0.0f};
   MainCamera.rotation = 0.0f;
-  MainCamera.zoom = (float)ScreenWindowRatio;
+  MainCamera.zoom = 4.0f;
 
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
@@ -117,9 +119,9 @@ int main(void)
   TextureAssets["OrangeBullet"] = {20, 8, 4, 4};
 
   // Fill background
-  for(int i = 0; i <= 10; i++)
+  for(int i = 0; i <= 14; i++)
   {
-    for(int j = 0; j <= 8; j++)
+    for(int j = 0; j <= 10; j++)
     {
       entt::entity Tile = Scene.create();
       Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
@@ -142,8 +144,8 @@ int main(void)
     }
 
     // Debug
-    if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
-    if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
+    //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
+    //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
 
     // Update
 
@@ -160,7 +162,9 @@ int main(void)
 
     EndMode2D();
 
-    DrawText(std::to_string(IsConnected() ? 1 : 0).c_str(), 8, 8, 24, BLUE);
+    DrawFPS(8, 4);
+    DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
+     IsConnected() ? GREEN : RED);
 
     EndDrawing();
   }
