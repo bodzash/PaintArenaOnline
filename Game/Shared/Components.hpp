@@ -45,3 +45,5 @@ struct PlayerInput
   bool bUp;
   bool bDown;
 };
+
+struct PlayerTag{};

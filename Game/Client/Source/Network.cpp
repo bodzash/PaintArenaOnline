@@ -57,7 +57,7 @@ void PollNetwork(entt::registry& Scene)
     {
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
-      std::cout << "Header: " << (int)PacketHeader << "\n";
+      //std::cout << "Header: " << (int)PacketHeader << "\n";
 
       if (PacketHeader == 0)
       {
@@ -76,6 +76,7 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
+        Scene.emplace<PlayerTag>(Player);
 
         // Handle slot
         NetworkClients[Msg->Nid].Id = Player;
@@ -94,6 +95,19 @@ void PollNetwork(entt::registry& Scene)
 
         // Handle slot
         NetworkClients[Msg->Nid].bActive = false;
+      }
+      else if (PacketHeader == 3)
+      {
+        UpdatePlayer* Msg = (UpdatePlayer*)Event.packet->data;
+
+        // Apply updates
+        entt::entity Player = NetworkClients[Msg->Nid].Id;
+        auto& Pos = Scene.get<Position>(Player);
+        auto& Hel = Scene.get<Health>(Player);
+
+        Pos.x = Msg->x;
+        Pos.y = Msg->y;
+        Hel.Current = Msg->Health;
       }
 
       enet_packet_destroy(Event.packet);
@@ -122,7 +136,7 @@ void SendPacket()
 
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown)
 {
-  ClientCommands Msg = { bLeft, bRight, bUp, bDown };
+  ClientCommands Msg = {0, bLeft, bRight, bUp, bDown};
 
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
 

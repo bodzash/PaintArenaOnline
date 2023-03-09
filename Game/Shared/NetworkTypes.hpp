@@ -17,6 +17,7 @@ struct RemotePeer
 // Client To Server Messages
 struct ClientCommands
 {
+  uint8_t Type = 0;
   bool bLeft;
   bool bRight;
   bool bUp;

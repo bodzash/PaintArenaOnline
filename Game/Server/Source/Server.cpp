@@ -36,6 +36,22 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
   }
 }
 
+void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
+{
+  auto View = Scene.view<Position, Health, NetId>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Hel = View.get<Health>(Entity);
+    auto& Nid = View.get<NetId>(Entity);
+
+    // Send out info
+    UpdatePlayer Msg = {3, (uint8_t)Nid.Id, Hel.Current, Pos.x, Pos.y};
+    ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+    enet_host_broadcast(Server, 0, Packet);
+  }
+}
+
 void InputToMovementSystem(entt::registry& Scene)
 {
   auto View = Scene.view<PlayerInput, Velocity, Speed>();
@@ -86,6 +102,7 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
     10.0f + RandomRange(0, 460));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
+  Scene.emplace<PlayerTag>(Player);
 
   return Player;
 }
@@ -260,7 +277,10 @@ int main()
     InputToMovementSystem(Scene);
     DynamicMovementSystem(DeltaTime, Scene);
     ResetPlayerInputSystem(Scene);
-    
+
+    // Post Update
+    NetworkPlayerUpdateSystem(Scene, pServer);
+
     // For fast shutdown
     if (GetKeyState(VK_SPACE)) return 1; // TODO Remove this
   }

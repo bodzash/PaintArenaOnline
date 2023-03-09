@@ -47,11 +47,10 @@ void HealthRendererSystem(entt::registry& Scene)
 
 int main(void)
 {
-  entt::registry Scene;
-
   InitWindow(640, 480, "Marble Shooter");
   SetTargetFPS(60);
 
+  entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
 
