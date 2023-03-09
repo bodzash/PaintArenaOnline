@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <array>
 #include <thread>
+#include <cstdlib>
+#include <ctime>
 
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
@@ -135,15 +137,18 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
 
 // CreatePrefabBullet()
 
+// Program entry point
 int main()
 {
-  entt::registry Scene;
+  // Set random seed value
+  srand((unsigned)time(NULL));
 
   const float FrameRate = 1000 / 60;
   float DeltaTime = 0.016f;
   system_clock::time_point TimeStart = system_clock::now();
   system_clock::time_point TimeEnd = system_clock::now();  
 
+  entt::registry Scene;
   const int MaxNetworkClients = 6;
   int NetworkClientNumber = 0;
   std::array<RemotePeer, MaxNetworkClients> NetworkClients;

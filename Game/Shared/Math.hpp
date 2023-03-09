@@ -23,9 +23,5 @@ float Approach(float Start, float End, float Shift)
 
 int RandomRange(int Min, int Max)
 {
-  return (std::rand() % (Max - Min)) + Min;
+  return (rand() % (Max - Min)) + Min;
 }
-
-// 0 - 10
-
-// 5 - 15 ->  
