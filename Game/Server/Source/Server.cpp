@@ -98,8 +98,7 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
   Scene.emplace<NetId>(Player, NetworkId);
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
-  Scene.emplace<Position>(Player, 10.0f + RandomRange(0, 600),
-    10.0f + RandomRange(0, 460));
+  Scene.emplace<Position>(Player, (float)RandomRange(0, 160), (float)RandomRange(0, 120));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<PlayerTag>(Player);
@@ -232,10 +231,6 @@ int main()
         uint8_t PacketHeader;
         memmove(&PacketHeader, Event.packet->data, 1);
         RemotePeer* PeerData = (RemotePeer*)Event.peer->data;
-        
-        //std::cout << "Peer: " << Event.peer << "\n";
-        //std::cout << "Header: " << (int)PacketHeader << "\n";
-        //std::cout << "Peer Data: " << PeerData << "\n";
 
         if (!PeerData->bActive) break;
         

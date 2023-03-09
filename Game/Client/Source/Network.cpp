@@ -76,6 +76,7 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
+        Scene.emplace<Shadow>(Player, "PlayerShadow", 0.0f, 6.0f);
         Scene.emplace<PlayerTag>(Player);
 
         // Handle slot
@@ -137,9 +138,7 @@ void SendPacket()
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown)
 {
   ClientCommands Msg = {0, bLeft, bRight, bUp, bDown};
-
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-
   enet_peer_send(Peer, 0, Packet);
 }
 

@@ -33,6 +33,35 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
+void ShadowRendererSystem(entt::registry& Scene, Texture2D Tex,
+  std::map<string, SpriteAsset>& Assets)
+{
+  auto View = Scene.view<Position, Shadow>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Sha = View.get<Shadow>(Entity);
+
+    DrawTextureRec(Tex, {Assets[Sha.Asset].x, Assets[Sha.Asset].y,
+      Assets[Sha.Asset].Width, Assets[Sha.Asset].Height},
+      {Pos.x + Sha.OffsetX, Pos.y + Sha.OffsetY}, {0, 0, 0, 100});
+  }
+}
+
+void BackgroundRendererSystem(entt::registry& Scene, Texture2D Tex,
+  std::map<string, SpriteAsset>& Assets)
+{
+  auto View = Scene.view<TileTag, Position>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+
+    DrawTextureRec(Tex, {Assets["FloorTile"].x, Assets["FloorTile"].y,
+      Assets["FloorTile"].Width, Assets["FloorTile"].Height},
+      {Pos.x, Pos.y}, WHITE);
+  }
+}
+
 void HealthRendererSystem(entt::registry& Scene)
 {
   auto View = Scene.view<Position, Health>();
@@ -47,12 +76,23 @@ void HealthRendererSystem(entt::registry& Scene)
 
 int main(void)
 {
-  InitWindow(640, 480, "Marble Shooter");
+  const int ScreenWidth = 160;
+  const int ScreenHeight = 120;
+  int ScreenWindowRatio = 6;
+
+  InitWindow(ScreenWidth * ScreenWindowRatio, ScreenHeight * ScreenWindowRatio,
+    "Marble Shooter");
   SetTargetFPS(60);
 
   entt::registry Scene;
+  Camera2D MainCamera;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
+
+  MainCamera.target = {0.0f, 0.0f};
+  MainCamera.offset = {0.0f, 0.0f};
+  MainCamera.rotation = 0.0f;
+  MainCamera.zoom = (float)ScreenWindowRatio;
 
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
@@ -76,28 +116,56 @@ int main(void)
   TextureAssets["LimeBullet"] = {16, 8, 4, 4};
   TextureAssets["OrangeBullet"] = {20, 8, 4, 4};
 
+  // Fill background
+  for(int i = 0; i <= 10; i++)
+  {
+    for(int j = 0; j <= 8; j++)
+    {
+      entt::entity Tile = Scene.create();
+      Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
+      Scene.emplace<TileTag>(Tile);
+    }
+  }
+
   ConnectToServer();
   
   while (!WindowShouldClose())
   {
+    // Network stuff
     PollNetwork(Scene);
 
+    // Need clean up
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S))
     {
       SendMovement(IsKeyDown(KEY_A), IsKeyDown(KEY_D),
         IsKeyDown(KEY_W), IsKeyDown(KEY_S));
     }
 
-    if (IsKeyDown(KEY_F)) Disconnect();
+    // Debug
+    if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
+    if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
 
+    // Update
+
+    // Render
     BeginDrawing();
     ClearBackground({167, 167, 167, 255});
+    
+    BeginMode2D(MainCamera);
+
+    BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
+    ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    HealthRendererSystem(Scene);
+    //HealthRendererSystem(Scene);
+
+    EndMode2D();
+
     DrawText(std::to_string(IsConnected() ? 1 : 0).c_str(), 8, 8, 24, BLUE);
+
     EndDrawing();
   }
 
+  Disconnect();
   DeInitENet();
   CloseWindow();
 }

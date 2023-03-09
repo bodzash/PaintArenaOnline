@@ -2,6 +2,9 @@
 
 #include <string>
 
+// BIG TODO RENAME ALL OF THESE TO ...Component
+
+// TODO PositionComponent
 struct Position
 {
   float x = 0.0f;
@@ -26,6 +29,7 @@ struct Speed
   float Deceleration = 0.0f;
 };
 
+// TODO NetworkComponent
 struct NetId
 {
   uint8_t Id;
@@ -38,6 +42,14 @@ struct Health
   int Current = Max;
 };
 
+struct Shadow
+{
+  std::string Asset;
+  float OffsetX = 0.0f;
+  float OffsetY = 0.0f;
+};
+
+
 struct PlayerInput
 {
   bool bLeft;
@@ -47,3 +59,4 @@ struct PlayerInput
 };
 
 struct PlayerTag{};
+struct TileTag{};
