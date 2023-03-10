@@ -54,7 +54,8 @@ struct Direction
 
 struct Collider
 {
-  float Diameter;
+  float Diameter = 1.0f;
+  float Radius = Diameter / 2.0f;
 };
 
 struct PlayerInput
@@ -63,6 +64,12 @@ struct PlayerInput
   bool bRight;
   bool bUp;
   bool bDown;
+};
+
+// TODO rename this pos
+struct TeamId
+{
+  uint8_t Team;
 };
 
 struct PlayerTag{};

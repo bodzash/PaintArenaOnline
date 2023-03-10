@@ -149,7 +149,7 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
 {
   entt::entity Player = Scene.create();
   Scene.emplace<PlayerTag>(Player);
-  Scene.emplace<Position>(Player, (float)RandomRange(0, 224), (float)RandomRange(0, 160));
+  Scene.emplace<Position>(Player, (float)RandomRange(4, 236), (float)RandomRange(4, 172));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<Collider>(Player, 8.0f);

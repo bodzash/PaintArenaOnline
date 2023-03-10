@@ -26,6 +26,11 @@ int RandomRange(int Min, int Max)
   return (rand() % (Max - Min)) + Min;
 }
 
+float PointDistance(float x1, float y1, float x2, float y2)
+{
+  return sqrtf(pow(x2 - x1, 2.0f) + pow(y2 - y1, 2.0f));
+}
+
 float PointDirection(float x1, float y1, float x2, float y2)
 {
   float Theta = atan2(y2 - y1, x2 - x1);

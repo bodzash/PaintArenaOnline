@@ -69,6 +69,7 @@ void PollNetwork(entt::registry& Scene)
         // Create player
         entt::entity Player = Scene.create();
         Scene.emplace<PlayerTag>(Player);
+        Scene.emplace<TeamId>(Player, Msg->Nid);
         Scene.emplace<NetworkId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Collider>(Player, 8.0f);

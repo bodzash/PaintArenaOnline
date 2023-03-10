@@ -78,8 +78,8 @@ void HealthRendererSystem(entt::registry& Scene)
     auto& Pos = View.get<Position>(Entity);
     auto& Hel = View.get<Health>(Entity);
 
-    DrawText(std::to_string(Pos.x).c_str(), Pos.x + 12, Pos.y, 8, BLACK);
-    DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
+    DrawText(std::to_string(Hel.Current).c_str(), Pos.x + 12, Pos.y, 8, BLACK);
+    //DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
   }
 }
 
@@ -138,6 +138,41 @@ void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
       Scene.destroy(Entity);
       break;
     } 
+  }
+}
+
+void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
+{
+  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
+  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health>();
+  for (auto Player : Players)
+  {
+    // Player
+    auto& PTid = Players.get<TeamId>(Player);
+    auto& PPos = Players.get<Position>(Player);
+    auto& PCol = Players.get<Collider>(Player);
+    auto& PHel = Players.get<Health>(Player);
+    
+    for (auto Bullet : Bullets)
+    {
+      // Bullet
+      auto& BTid = Players.get<TeamId>(Bullet);
+      auto& BPos = Players.get<Position>(Bullet);
+      auto& BCol = Players.get<Collider>(Bullet);
+
+      // Check if own
+      if (PTid.Team == BTid.Team) break;
+
+      // Check if dead
+      if (PHel.Current <= PHel.Min) break;
+
+      // Check for collision
+      if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
+      {
+        if (bCanDamage) PHel.Current -= 20;
+        Scene.destroy(Bullet);
+      }
+    }
   }
 }
 
@@ -201,8 +236,6 @@ int main(void)
     // Network stuff
     PollNetwork(Scene);
 
-    float Angle = 0.0f;
-
     // Need clean up
     if (IsConnected())
     {
@@ -217,7 +250,7 @@ int main(void)
       if (MyNetworkId != 10)
       {
         auto& Pos = Scene.get<Position>(MyPlayerId);
-        Angle = PointDirection(Pos.x, Pos.y, GetMouseX() / 4, GetMouseY() / 4);
+        float Angle = PointDirection(Pos.x, Pos.y, GetMouseX() / 4, GetMouseY() / 4);
         
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(3.32f);
@@ -226,6 +259,7 @@ int main(void)
         {
           entt::entity Bullet = Scene.create();
           Scene.emplace<BulletTag>(Bullet);
+          Scene.emplace<TeamId>(Bullet, MyNetworkId);
           Scene.emplace<Position>(Bullet, Pos.x, Pos.y);
           Scene.emplace<Direction>(Bullet, Angle);
           Scene.emplace<Speed>(Bullet, 0.5f);
@@ -242,6 +276,7 @@ int main(void)
 
     // Update
     BulletMovementSystem(Scene);
+    BulletDamageSystem(Scene, false);
     RemoveBulletOutOfBoundsSystem(Scene);
 
     // Render
@@ -253,6 +288,7 @@ int main(void)
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
+    HealthRendererSystem(Scene);
     //ColliderDebugRendererSystem(Scene);
 
     EndMode2D();
@@ -261,9 +297,8 @@ int main(void)
     DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
      IsConnected() ? GREEN : RED);
     /*
-    DrawText(std::to_string(Angle).c_str(), 8, 44, 24, BLUE);
-    DrawText(std::to_string(GetMouseX() / 4).c_str(), 8, 64, 24, BLACK);
-    DrawText(std::to_string(GetMouseY() / 4).c_str(), 8, 84, 24, BLACK);
+    DrawText(std::to_string(GetMouseX() / 4).c_str(), 8, 32, 24, BLACK);
+    DrawText(std::to_string(GetMouseY() / 4).c_str(), 8, 64, 24, BLACK);
     */
 
     EndDrawing();
