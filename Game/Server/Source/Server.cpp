@@ -49,8 +49,6 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 
     Vel.x = Approach(Vel.x, 0.0f, Spd.Deceleration);
     Vel.y = Approach(Vel.y, 0.0f, Spd.Deceleration);
-
-    std::cout << Pos.x << " - " << Pos.y << "\n";
   }
 }
 
@@ -284,13 +282,10 @@ int main()
             // Give data to peer
             Event.peer->data = &NetworkClients[i];
             NetworkClients[i].pPeer = Event.peer;
-            std::cout << "Found: " << i << " Active: " << NetworkClients[i].bActive << "\n";
             break;
           }
         }
-
-        //std::cout << "Total: " << NetworkClientNumber << "\n";
-
+        
         // If didnt found an empty slot GTFO
         if (!bFoundSlot) enet_peer_disconnect(Event.peer, 0);
       }
@@ -308,12 +303,11 @@ int main()
         {
           ClientMovementCommands* Cmd = (ClientMovementCommands*)Event.packet->data;
           ApplyNetworkInputToPlayer(Scene, PeerData->Id, Cmd);
-          std::cout << "Cum by: " << (int)PeerData->NetworkId << "\n";
         }
         else if (PacketHeader == 1)
         {
           ClientShootingCommands* Cmd = (ClientShootingCommands*)Event.packet->data;
-          std::cout << "Shot by: " << (int)PeerData->NetworkId << "\n";
+          // Shooting logic here
         }
 
         enet_packet_destroy(Event.packet);
