@@ -95,7 +95,7 @@ void ColliderDebugRendererSystem(entt::registry& Scene)
   }
 }
 
-void BulletMovementSystem(entt::registry& Scene)
+void BulletMovementSystem(entt::registry& Scene, float Delta)
 {
   auto View = Scene.view<BulletTag, Position, Direction, Speed>();
   for (auto Entity : View)
@@ -105,8 +105,8 @@ void BulletMovementSystem(entt::registry& Scene)
     auto& Spd = View.get<Speed>(Entity);
 
     // Move angle
-    Pos.x += (Spd.MaxSpeed * (float)cos(Dir.Angle)); //* Delta;
-    Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)); //* Delta;
+    Pos.x += (Spd.MaxSpeed * (float)cos(Dir.Angle)) * Delta;
+    Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)) * Delta;
   }
 }
 
@@ -185,6 +185,7 @@ int main(void)
 
   InitWindow(WindowWidth, WindowHeight, "Marble Shooter");
   SetTargetFPS(60);
+  HideCursor();
 
   entt::registry Scene;
   Camera2D MainCamera;
@@ -198,8 +199,9 @@ int main(void)
 
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
-  TextureAssets["PlayerShadow"] = {24, 11, 8, 3, 4, -2};
-  TextureAssets["BulletShadow"] = {32, 11, 4, 3, 2, -3};
+  TextureAssets["Cursor"] = {16, 12, 10, 10, 5, 5};
+  TextureAssets["PlayerShadow"] = {24, 8, 8, 3, 4, -2};
+  TextureAssets["BulletShadow"] = {32, 8, 4, 3, 2, -3};
 
   // Players
   TextureAssets["PinkPlayer"] = {0, 0, 8, 8, 4, 4};
@@ -262,7 +264,7 @@ int main(void)
           Scene.emplace<TeamId>(Bullet, MyNetworkId);
           Scene.emplace<Position>(Bullet, Pos.x, Pos.y);
           Scene.emplace<Direction>(Bullet, Angle);
-          Scene.emplace<Speed>(Bullet, 0.5f);
+          Scene.emplace<Speed>(Bullet, 140.0f);
           Scene.emplace<Collider>(Bullet, 4.0f);
           Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)MyNetworkId]);
           Scene.emplace<Shadow>(Bullet, "BulletShadow");
@@ -275,7 +277,7 @@ int main(void)
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
 
     // Update
-    BulletMovementSystem(Scene);
+    BulletMovementSystem(Scene, GetFrameTime());
     BulletDamageSystem(Scene, false);
     RemoveBulletOutOfBoundsSystem(Scene);
 
@@ -288,8 +290,12 @@ int main(void)
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    HealthRendererSystem(Scene);
+    //HealthRendererSystem(Scene);
     //ColliderDebugRendererSystem(Scene);
+
+    DrawTextureRec(TextureAtlas, {TextureAssets["Cursor"].x, TextureAssets["Cursor"].y,
+      TextureAssets["Cursor"].Width, TextureAssets["Cursor"].Height},
+      {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
 
     EndMode2D();
 
