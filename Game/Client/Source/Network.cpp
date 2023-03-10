@@ -47,9 +47,6 @@ void PollNetwork(entt::registry& Scene)
     case ENET_EVENT_TYPE_CONNECT:
     {
       std::cout << "Connection event recieved chief" << "\n";
-      
-      // Set connection state
-      bConnected = true;
     }
     break;
 
@@ -61,10 +58,10 @@ void PollNetwork(entt::registry& Scene)
 
       if (PacketHeader == 0)
       {
+        // Set our self id and connection status
         OnConnection* Msg = (OnConnection*)Event.packet->data;
-        
-        // Set our self id
         SelfNetworkId = Msg->Nid;
+        bConnected = true;
       }
       else if (PacketHeader == 1)
       {
@@ -72,12 +69,14 @@ void PollNetwork(entt::registry& Scene)
 
         // Create player
         entt::entity Player = Scene.create();
-        Scene.emplace<NetId>(Player, Msg->Nid);
+        Scene.emplace<PlayerTag>(Player);
+        Scene.emplace<NetworkId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
+        Scene.emplace<Direction>(Player);
+        Scene.emplace<Collider>(Player, 8.0f);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
-        Scene.emplace<Shadow>(Player, "PlayerShadow", 0.0f, 6.0f);
-        Scene.emplace<PlayerTag>(Player);
+        Scene.emplace<Shadow>(Player, "PlayerShadow");
 
         // Handle slot
         NetworkClients[Msg->Nid].Id = Player;
@@ -89,7 +88,7 @@ void PollNetwork(entt::registry& Scene)
         DeletePlayer* Msg = (DeletePlayer*)Event.packet->data;
 
         // If no such player just gtfo
-        if (NetworkClients[Msg->Nid].bActive == false) break;
+        if (!NetworkClients[Msg->Nid].bActive) break;
 
         // Remove entity
         Scene.destroy(NetworkClients[Msg->Nid].Id);
@@ -100,6 +99,9 @@ void PollNetwork(entt::registry& Scene)
       else if (PacketHeader == 3)
       {
         UpdatePlayer* Msg = (UpdatePlayer*)Event.packet->data;
+
+        // If no such player just gtfo
+        if (!NetworkClients[Msg->Nid].bActive) break;
 
         // Apply updates
         entt::entity Player = NetworkClients[Msg->Nid].Id;
@@ -127,17 +129,21 @@ void PollNetwork(entt::registry& Scene)
   }
 }
 
-void SendPacket()
+uint8_t GetSelfNetworkId()
 {
-  string Msg = "Hi from client :)";
-  ENetPacket* Packet = enet_packet_create(Msg.c_str(), strlen(Msg.c_str()) + 1,
-    ENET_PACKET_FLAG_RELIABLE);
-  enet_peer_send(Peer, 0, Packet);
+  return SelfNetworkId;
 }
 
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown)
 {
-  ClientCommands Msg = {0, bLeft, bRight, bUp, bDown};
+  ClientMovementCommands Msg = {0, bLeft, bRight, bUp, bDown};
+  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+  enet_peer_send(Peer, 0, Packet);
+}
+
+void SendShooting(float Angle)
+{
+  ClientShootingCommands Msg = {1, Angle};
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
   enet_peer_send(Peer, 0, Packet);
 }

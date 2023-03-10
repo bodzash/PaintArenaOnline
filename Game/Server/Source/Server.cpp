@@ -16,6 +16,20 @@
 using std::string;
 using namespace std::chrono;
 
+template<typename T>
+void ServerSendMessage(T& Msg, ENetPeer* Peer)
+{
+  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+  enet_peer_send(Peer, 0, Packet);
+}
+
+template<typename T>
+void ServerBroadcastMessage(T& Msg, ENetHost* Server)
+{
+  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
+  enet_host_broadcast(Server, 0, Packet);
+}
+
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 {
   auto View = Scene.view<Position, Velocity, Speed>();
@@ -35,6 +49,8 @@ void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
 
     Vel.x = Approach(Vel.x, 0.0f, Spd.Deceleration);
     Vel.y = Approach(Vel.y, 0.0f, Spd.Deceleration);
+
+    std::cout << Pos.x << " - " << Pos.y << "\n";
   }
 }
 
@@ -65,19 +81,29 @@ void KeepPlayerInBoundsSystem(entt::registry& Scene)
   }
 }
 
+void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, BulletTag>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+
+    // Dawg
+  }
+}
+
 void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
 {
-  auto View = Scene.view<Position, Health, NetId>();
+  auto View = Scene.view<Position, Health, NetworkId>();
   for (auto Entity : View)
   {
     auto& Pos = View.get<Position>(Entity);
     auto& Hel = View.get<Health>(Entity);
-    auto& Nid = View.get<NetId>(Entity);
+    auto& Nid = View.get<NetworkId>(Entity);
 
     // Send out info
     UpdatePlayer Msg = {3, (uint8_t)Nid.Id, Hel.Current, Pos.x, Pos.y};
-    ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-    enet_host_broadcast(Server, 0, Packet);
+    ServerBroadcastMessage<UpdatePlayer>(Msg, Server);
   }
 }
 
@@ -111,7 +137,7 @@ void ResetPlayerInputSystem(entt::registry& Scene)
 }
 
 void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player,
-  ClientCommands* Cmd)
+  ClientMovementCommands* Cmd)
 {
   auto& Inp = Scene.get<PlayerInput>(Player);
 
@@ -121,38 +147,53 @@ void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player,
   Inp.bRight = Cmd->bRight;
 }
 
-entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetworkId)
+entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
 {
   entt::entity Player = Scene.create();
-  Scene.emplace<NetId>(Player, NetworkId);
-  Scene.emplace<Health>(Player, 0, 100);
-  Scene.emplace<PlayerInput>(Player);
+  Scene.emplace<PlayerTag>(Player);
   Scene.emplace<Position>(Player, (float)RandomRange(0, 224), (float)RandomRange(0, 160));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
-  Scene.emplace<PlayerTag>(Player);
+  Scene.emplace<Collider>(Player, 8.0f);
+  Scene.emplace<Health>(Player, 0, 100);
+  Scene.emplace<NetworkId>(Player, NetId);
+  Scene.emplace<PlayerInput>(Player);
 
   return Player;
 }
 
-// CreatePrefabBullet()
+entt::entity CreatePrefabBullet(entt::registry& Scene, float x, float y, float Angle)
+{
+  entt::entity Bullet = Scene.create();
+  Scene.emplace<BulletTag>(Bullet);
+  Scene.emplace<Position>(Bullet, x, y);
+  Scene.emplace<Direction>(Bullet, Angle);
+  Scene.emplace<Collider>(Bullet, 4.0f);
+
+  return Bullet;
+}
 
 // Program entry point
 int main()
 {
-  // Set random seed value
+  // Set random seed value for random number generator
   srand((unsigned)time(NULL));
 
+  // ECS world
+  entt::registry Scene;
+
+  // Timing
   const float FrameRate = 1000 / 60;
   float DeltaTime = 0.016f;
   system_clock::time_point TimeStart = system_clock::now();
   system_clock::time_point TimeEnd = system_clock::now();  
 
-  entt::registry Scene;
+  // Scene and Network info
   const int MaxNetworkClients = 6;
   int NetworkClientNumber = 0;
   std::array<RemotePeer, MaxNetworkClients> NetworkClients;
   
+  // ENet
   ENetHost* pServer;
   ENetAddress Address;
   ENetEvent Event;
@@ -166,7 +207,7 @@ int main()
 
   std::cout << "Game Server Started" << "\n";
 
-  // pServer Game Loop
+  // Server Game Loop
   while (true)
   {
     // Delta timing and thread sleeping
@@ -207,15 +248,14 @@ int main()
             bFoundSlot = true;
             NetworkClientNumber++;
 
-            NetworkClients[i].NetworkId = i;
+            NetworkClients[i].NetworkId = (uint8_t)i;
             NetworkClients[i].bActive = true;
             NetworkClients[i].Id = CreatePrefabPlayer(Scene, i);
 
-            // Send peer the self netid
+            // Send peer the self NetworkId
             {
               OnConnection Msg = {0, (uint8_t)i};
-              ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-              enet_peer_send(Event.peer, 0, Packet);
+              ServerSendMessage<OnConnection>(Msg, Event.peer);
             }
 
             // Send every other peer info
@@ -228,8 +268,7 @@ int main()
                 auto& Hel = Scene.get<Health>(NetworkClients[j].Id);
 
                 CreatePlayer Msg = {1, (uint8_t)j, Hel.Current, Pos.x, Pos.y};
-                ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-                enet_peer_send(Event.peer, 0, Packet);
+                ServerSendMessage<CreatePlayer>(Msg, Event.peer);
               }
             }
 
@@ -239,19 +278,18 @@ int main()
               auto& Hel = Scene.get<Health>(NetworkClients[i].Id);
 
               CreatePlayer Msg = {1, (uint8_t)i, Hel.Current, Pos.x, Pos.y};
-              ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-              enet_host_broadcast(pServer, 0, Packet);
+              ServerBroadcastMessage<CreatePlayer>(Msg, pServer);
             }
 
             // Give data to peer
             Event.peer->data = &NetworkClients[i];
             NetworkClients[i].pPeer = Event.peer;
+            std::cout << "Found: " << i << " Active: " << NetworkClients[i].bActive << "\n";
             break;
           }
         }
 
-        std::cout << "Total: " << NetworkClientNumber << "\n";
-        std::cout << "Found: " << bFoundSlot << "\n";
+        //std::cout << "Total: " << NetworkClientNumber << "\n";
 
         // If didnt found an empty slot GTFO
         if (!bFoundSlot) enet_peer_disconnect(Event.peer, 0);
@@ -268,8 +306,14 @@ int main()
         
         if (PacketHeader == 0)
         {
-          ClientCommands* Cmd = (ClientCommands*)Event.packet->data;
+          ClientMovementCommands* Cmd = (ClientMovementCommands*)Event.packet->data;
           ApplyNetworkInputToPlayer(Scene, PeerData->Id, Cmd);
+          std::cout << "Cum by: " << (int)PeerData->NetworkId << "\n";
+        }
+        else if (PacketHeader == 1)
+        {
+          ClientShootingCommands* Cmd = (ClientShootingCommands*)Event.packet->data;
+          std::cout << "Shot by: " << (int)PeerData->NetworkId << "\n";
         }
 
         enet_packet_destroy(Event.packet);
@@ -291,10 +335,12 @@ int main()
         PeerData->bActive = false;
         PeerData->pPeer = nullptr;
 
+        // Destroy entity
+        Scene.destroy(PeerData->Id);
+
         // Send out a disconnect
         DeletePlayer Msg = {2, PeerData->NetworkId};
-        ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-        enet_host_broadcast(pServer, 0, Packet);
+        ServerBroadcastMessage<DeletePlayer>(Msg, pServer);
       }
       break;
       }
@@ -305,9 +351,8 @@ int main()
     DynamicMovementSystem(DeltaTime, Scene);
     KeepPlayerInBoundsSystem(Scene);
 
-    ResetPlayerInputSystem(Scene);
-
     // Post Update
+    ResetPlayerInputSystem(Scene);
     NetworkPlayerUpdateSystem(Scene, pServer);
 
     // For fast shutdown

@@ -15,13 +15,19 @@ struct RemotePeer
 };
 
 // Client To Server Messages
-struct ClientCommands
+struct ClientMovementCommands
 {
   uint8_t Type = 0;
   bool bLeft;
   bool bRight;
   bool bUp;
   bool bDown;
+};
+
+struct ClientShootingCommands
+{
+  uint8_t Type = 0;
+  float Angle;
 };
 
 // Server To Client Messages

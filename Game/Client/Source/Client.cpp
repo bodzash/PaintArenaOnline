@@ -16,6 +16,8 @@ struct SpriteAsset
   float y = 0.0f;
   float Width = 8.0f;
   float Height = 8.0f;
+  float OffsetX = 0.0f;
+  float OffsetY = 0.0f;
 };
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
@@ -29,7 +31,8 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
 
     DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
       Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
-      {Pos.x, Pos.y}, WHITE);
+      {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
+      WHITE);
   }
 }
 
@@ -44,7 +47,8 @@ void ShadowRendererSystem(entt::registry& Scene, Texture2D Tex,
 
     DrawTextureRec(Tex, {Assets[Sha.Asset].x, Assets[Sha.Asset].y,
       Assets[Sha.Asset].Width, Assets[Sha.Asset].Height},
-      {Pos.x + Sha.OffsetX, Pos.y + Sha.OffsetY}, {0, 0, 0, 100});
+      {Pos.x - Assets[Sha.Asset].OffsetX, Pos.y - Assets[Sha.Asset].OffsetY},
+      {0, 0, 0, 100});
   }
 }
 
@@ -72,7 +76,18 @@ void HealthRendererSystem(entt::registry& Scene)
 
     DrawText(std::to_string(Pos.x).c_str(), Pos.x + 12, Pos.y, 8, BLACK);
     DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
+  }
+}
 
+void ColliderDebugRendererSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, Collider>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Col = View.get<Collider>(Entity);
+
+    DrawCircleV({Pos.x, Pos.y}, Col.Diameter / 2.0f, {85, 170, 250, 191});
   }
 }
 
@@ -98,25 +113,25 @@ int main(void)
 
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
-  TextureAssets["PlayerShadow"] = {24, 11, 8, 3};
-  TextureAssets["BulletShadow"] = {32, 11, 4, 3};
+  TextureAssets["PlayerShadow"] = {24, 11, 8, 3, 4, -2};
+  TextureAssets["BulletShadow"] = {32, 11, 4, 3, 2};
 
   // Players
-  TextureAssets["PinkPlayer"] = {0, 0, 8, 8};
-  TextureAssets["GreenPlayer"] = {8, 0, 8, 8};
-  TextureAssets["RedPlayer"] = {16, 0, 8, 8};
-  TextureAssets["CyanPlayer"] = {24, 0, 8, 8};
-  TextureAssets["LimePlayer"] = {32, 0, 8, 8};
-  TextureAssets["OrangePlayer"] = {40, 0, 8, 8};
+  TextureAssets["PinkPlayer"] = {0, 0, 8, 8, 4, 4};
+  TextureAssets["GreenPlayer"] = {8, 0, 8, 8, 4, 4};
+  TextureAssets["RedPlayer"] = {16, 0, 8, 8, 4, 4};
+  TextureAssets["CyanPlayer"] = {24, 0, 8, 8, 4, 4};
+  TextureAssets["LimePlayer"] = {32, 0, 8, 8, 4, 4};
+  TextureAssets["OrangePlayer"] = {40, 0, 8, 8, 4, 4};
 
 
   // Bullets
-  TextureAssets["PinkBullet"] = {0, 8, 4, 4};
-  TextureAssets["GreenBullet"] = {4, 8, 4, 4};
-  TextureAssets["RedBullet"] = {8, 8, 4, 4};
-  TextureAssets["CyanBullet"] = {12, 8, 4, 4};
-  TextureAssets["LimeBullet"] = {16, 8, 4, 4};
-  TextureAssets["OrangeBullet"] = {20, 8, 4, 4};
+  TextureAssets["PinkBullet"] = {0, 8, 4, 4, 2, 2};
+  TextureAssets["GreenBullet"] = {4, 8, 4, 4, 2, 2};
+  TextureAssets["RedBullet"] = {8, 8, 4, 4, 2, 2};
+  TextureAssets["CyanBullet"] = {12, 8, 4, 4, 2, 2};
+  TextureAssets["LimeBullet"] = {16, 8, 4, 4, 2, 2};
+  TextureAssets["OrangeBullet"] = {20, 8, 4, 4, 2, 2};
 
   // Fill background
   for(int i = 0; i <= 14; i++)
@@ -143,6 +158,8 @@ int main(void)
         IsKeyDown(KEY_W), IsKeyDown(KEY_S));
     }
 
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(3.32f);
+
     // Debug
     //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
@@ -158,6 +175,7 @@ int main(void)
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
+    ColliderDebugRendererSystem(Scene);
     //HealthRendererSystem(Scene);
 
     EndMode2D();

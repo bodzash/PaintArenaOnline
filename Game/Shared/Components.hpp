@@ -30,7 +30,7 @@ struct Speed
 };
 
 // TODO NetworkComponent
-struct NetId
+struct NetworkId
 {
   uint8_t Id;
 };
@@ -45,10 +45,17 @@ struct Health
 struct Shadow
 {
   std::string Asset;
-  float OffsetX = 0.0f;
-  float OffsetY = 0.0f;
 };
 
+struct Direction
+{
+  float Angle = 0.0f;
+};
+
+struct Collider
+{
+  float Diameter;
+};
 
 struct PlayerInput
 {
@@ -59,4 +66,5 @@ struct PlayerInput
 };
 
 struct PlayerTag{};
+struct BulletTag{};
 struct TileTag{};

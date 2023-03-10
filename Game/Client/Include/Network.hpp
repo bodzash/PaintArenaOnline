@@ -5,7 +5,8 @@
 bool IsConnected();
 void ConnectToServer();
 void PollNetwork(entt::registry& Scene);
-void SendPacket();
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown);
+void SendShooting(float Angle);
+uint8_t GetSelfNetworkId();
 void Disconnect();
 void DeInitENet();
