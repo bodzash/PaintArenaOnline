@@ -7,6 +7,10 @@
 
 #include "Network.hpp"
 #include "Components.hpp"
+#include "Math.hpp"
+
+std::array<std::string, 6> NetworkIdToBulletAsset = {"PinkBullet", "GreenBullet",
+  "RedBullet", "CyanBullet", "LimeBullet", "OrangeBullet"};
 
 using std::string;
 
@@ -91,6 +95,52 @@ void ColliderDebugRendererSystem(entt::registry& Scene)
   }
 }
 
+void BulletMovementSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<BulletTag, Position, Direction, Speed>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Dir = View.get<Direction>(Entity);
+    auto& Spd = View.get<Speed>(Entity);
+
+    // Move angle
+    Pos.x += (Spd.MaxSpeed * (float)cos(Dir.Angle)); //* Delta;
+    Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)); //* Delta;
+  }
+}
+
+void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, BulletTag>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+
+    if (Pos.x < 0.0f)
+    {
+      Scene.destroy(Entity);
+      break;
+    }
+    else if (Pos.x > 240.0f)
+    {
+      Scene.destroy(Entity);
+      break;
+    }
+
+    if (Pos.y < 0.0f)
+    {
+      Scene.destroy(Entity);
+      break;
+    }
+    else if (Pos.y > 176.0f)
+    {
+      Scene.destroy(Entity);
+      break;
+    } 
+  }
+}
+
 int main(void)
 {
   const int ScreenWidth = 224;
@@ -114,7 +164,7 @@ int main(void)
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
   TextureAssets["PlayerShadow"] = {24, 11, 8, 3, 4, -2};
-  TextureAssets["BulletShadow"] = {32, 11, 4, 3, 2};
+  TextureAssets["BulletShadow"] = {32, 11, 4, 3, 2, -3};
 
   // Players
   TextureAssets["PinkPlayer"] = {0, 0, 8, 8, 4, 4};
@@ -139,8 +189,8 @@ int main(void)
     for(int j = 0; j <= 10; j++)
     {
       entt::entity Tile = Scene.create();
-      Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
       Scene.emplace<TileTag>(Tile);
+      Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
     }
   }
 
@@ -151,20 +201,48 @@ int main(void)
     // Network stuff
     PollNetwork(Scene);
 
+    float Angle = 0.0f;
+
     // Need clean up
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S))
+    if (IsConnected())
     {
-      SendMovement(IsKeyDown(KEY_A), IsKeyDown(KEY_D),
-        IsKeyDown(KEY_W), IsKeyDown(KEY_S));
+      entt::entity MyPlayerId = GetSelfPlayerEntity();
+      uint8_t MyNetworkId = GetSelfNetworkId();
+      bool bLeft = IsKeyDown(KEY_A) ;
+      bool bRight = IsKeyDown(KEY_D);
+      bool bUp = IsKeyDown(KEY_W);
+      bool bDown = IsKeyDown(KEY_S);
+
+      // Calculate angle
+      if (MyNetworkId != 10)
+      {
+        auto& Pos = Scene.get<Position>(MyPlayerId);
+        Angle = PointDirection(Pos.x, Pos.y, GetMouseX() / 4, GetMouseY() / 4);
+        
+        if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(3.32f);
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        {
+          entt::entity Bullet = Scene.create();
+          Scene.emplace<BulletTag>(Bullet);
+          Scene.emplace<Position>(Bullet, Pos.x, Pos.y);
+          Scene.emplace<Direction>(Bullet, Angle);
+          Scene.emplace<Speed>(Bullet, 0.5f);
+          Scene.emplace<Collider>(Bullet, 4.0f);
+          Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)MyNetworkId]);
+          Scene.emplace<Shadow>(Bullet, "BulletShadow");
+        }
+      }
     }
-
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(3.32f);
-
+    
     // Debug
     //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
 
     // Update
+    BulletMovementSystem(Scene);
+    RemoveBulletOutOfBoundsSystem(Scene);
 
     // Render
     BeginDrawing();
@@ -175,14 +253,18 @@ int main(void)
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    ColliderDebugRendererSystem(Scene);
-    //HealthRendererSystem(Scene);
+    //ColliderDebugRendererSystem(Scene);
 
     EndMode2D();
 
     DrawFPS(8, 4);
     DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
      IsConnected() ? GREEN : RED);
+    /*
+    DrawText(std::to_string(Angle).c_str(), 8, 44, 24, BLUE);
+    DrawText(std::to_string(GetMouseX() / 4).c_str(), 8, 64, 24, BLACK);
+    DrawText(std::to_string(GetMouseY() / 4).c_str(), 8, 84, 24, BLACK);
+    */
 
     EndDrawing();
   }

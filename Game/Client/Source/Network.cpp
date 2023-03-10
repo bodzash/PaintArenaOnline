@@ -17,7 +17,7 @@ const int MaxNetworkClients = 6;
 std::array<RemotePeer, MaxNetworkClients> NetworkClients;
 
 bool bConnected = false;
-uint8_t SelfNetworkId = 0;
+uint8_t SelfNetworkId = 10;
 
 bool IsConnected()
 {
@@ -54,7 +54,6 @@ void PollNetwork(entt::registry& Scene)
     {
       uint8_t PacketHeader;
       memmove(&PacketHeader, Event.packet->data, 1);
-      //std::cout << "Header: " << (int)PacketHeader << "\n";
 
       if (PacketHeader == 0)
       {
@@ -72,7 +71,6 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<PlayerTag>(Player);
         Scene.emplace<NetworkId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
-        Scene.emplace<Direction>(Player);
         Scene.emplace<Collider>(Player, 8.0f);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
@@ -122,6 +120,7 @@ void PollNetwork(entt::registry& Scene)
       std::cout << "Disconnect event recieved boss" << "\n";
 
       // Set connection state
+      SelfNetworkId = 10;
       bConnected = false;
     }
     break;
@@ -132,6 +131,11 @@ void PollNetwork(entt::registry& Scene)
 uint8_t GetSelfNetworkId()
 {
   return SelfNetworkId;
+}
+
+entt::entity GetSelfPlayerEntity()
+{
+  return NetworkClients[SelfNetworkId].Id;
 }
 
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown)

@@ -59,22 +59,22 @@ void KeepPlayerInBoundsSystem(entt::registry& Scene)
   {
     auto& Pos = View.get<Position>(Entity);
 
-    if (Pos.x < 0.0f)
+    if (Pos.x < 4.0f)
     {
-      Pos.x = 0.0f;
+      Pos.x = 4.0f;
     }
-    else if (Pos.x > 232.0f)
+    else if (Pos.x > 236.0f)
     {
-      Pos.x = 232.0f;
+      Pos.x = 236.0f;
     }
 
-    if (Pos.y < 0.0f)
+    if (Pos.y < 4.0f)
     {
-      Pos.y = 0.0f;
+      Pos.y = 4.0f;
     }
-    else if (Pos.y > 168.0f)
+    else if (Pos.y > 172.0f)
     {
-      Pos.y = 168.0f;
+      Pos.y = 172.0f;
     }  
   }
 }
