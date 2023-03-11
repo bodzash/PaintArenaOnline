@@ -55,7 +55,7 @@ void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
 void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
 {
   auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
-  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health>();
+  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health, Audio>();
   for (auto Player : Players)
   {
     // Player
@@ -63,6 +63,7 @@ void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
     auto& PPos = Players.get<Position>(Player);
     auto& PCol = Players.get<Collider>(Player);
     auto& PHel = Players.get<Health>(Player);
+    auto& PAud = Players.get<Audio>(Player);
     
     for (auto Bullet : Bullets)
     {
@@ -78,6 +79,7 @@ void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
       if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
       {
         if (bCanDamage) PHel.Current -= 20;
+        PAud.bIsPlaying = true;
         Scene.destroy(Bullet);
       }
     }

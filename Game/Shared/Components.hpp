@@ -22,8 +22,10 @@ struct Sprite
 
 struct Audio
 {
-  std::string Asset;
+  std::string Asset1;
+  std::string Asset2;
   bool bIsPlaying = false;
+  bool bOneTime = true;
 };
 
 struct Smudge

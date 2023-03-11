@@ -166,6 +166,7 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<Collider>(Player, 8.0f);
+  Scene.emplace<Audio>(Player, "", "", false, false); // Sadly this has to be done
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
 

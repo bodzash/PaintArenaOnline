@@ -42,7 +42,7 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   entt::entity Effect = Scene.create();
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
-  Scene.emplace<Audio>(Effect, (Index == 1) ? "Splash1" : "Splash2", true);
+  Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
 }
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
@@ -151,8 +151,14 @@ void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
   {
     auto& Aud = View.get<Audio>(Entity);
 
-    PlaySound(Assets[Aud.Asset]);
-    Scene.remove<Audio>(Entity);
+    if (Aud.bIsPlaying)
+    {
+      int Rnd = RandomInt(3);
+
+      PlaySound(Assets[(Rnd == 1) ? Aud.Asset1 : Aud.Asset2]);
+      Aud.bIsPlaying = false;
+      if (Aud.bOneTime) Scene.remove<Audio>(Entity);
+    }
   }
 }
 
@@ -229,8 +235,8 @@ int main(void)
   AudioAssets["Shoot2"] = LoadSound("./Resources/Shoot2.ogg");
 
   // Hit
-  //AudioAssets["Hit1"] = LoadSound("./Resources/Hit1.ogg");
-  //AudioAssets["Hit2"] = LoadSound("./Resources/Hit2.ogg");
+  AudioAssets["Hit1"] = LoadSound("./Resources/Hit1.ogg");
+  AudioAssets["Hit2"] = LoadSound("./Resources/Hit2.ogg");
 
   // Splash
   AudioAssets["Splash1"] = LoadSound("./Resources/Splash1.ogg");
@@ -272,15 +278,16 @@ int main(void)
         
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
-
-        //if (IsKeyPressed(KEY_F)) PlaySound(AudioAssets["Shoot1"]);
-        //if (IsKeyPressed(KEY_E)) PlaySound(AudioAssets["Splash1"]);
       }
     }
+
+    //SetMasterVolume
     
     // Debug
     //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
+    if (IsKeyPressed(KEY_M)) SetMasterVolume(0.0f);
+    if (IsKeyPressed(KEY_N)) SetMasterVolume(1.0f);
 
     // Update
     AudioPlayerSystem(Scene, AudioAssets);
