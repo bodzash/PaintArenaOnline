@@ -283,11 +283,11 @@ int main(void)
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
 
     // Update
+    AudioPlayerSystem(Scene, AudioAssets);
     BulletMovementSystem(Scene, GetFrameTime());
     BulletDamageSystem(Scene, false);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
-    AudioPlayerSystem(Scene, AudioAssets);
 
     // Render
     BeginDrawing();

@@ -10,7 +10,7 @@ if(IS_CLIENT)
 
   project(Client)
 
-  #set(CMAKE_CXX_FLAGS "-mwindows")
+  set(CMAKE_CXX_FLAGS "-mwindows")
 
   add_executable(${PROJECT_NAME}
     Client/Source/Client.cpp
