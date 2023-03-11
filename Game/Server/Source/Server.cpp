@@ -12,6 +12,7 @@
 #include "Math.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
+#include "BulletSystem.hpp"
 
 using std::string;
 using namespace std::chrono;
@@ -79,17 +80,6 @@ void KeepPlayerInBoundsSystem(entt::registry& Scene)
   }
 }
 
-void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, BulletTag>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    // Dawg
-  }
-}
-
 void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
 {
   auto View = Scene.view<Position, Health, NetworkId>();
@@ -149,24 +139,28 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
 {
   entt::entity Player = Scene.create();
   Scene.emplace<PlayerTag>(Player);
+  Scene.emplace<TeamId>(Player, NetId);
+  Scene.emplace<NetworkId>(Player, NetId);
   Scene.emplace<Position>(Player, (float)RandomRange(4, 236), (float)RandomRange(4, 172));
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<Collider>(Player, 8.0f);
   Scene.emplace<Health>(Player, 0, 100);
-  Scene.emplace<NetworkId>(Player, NetId);
   Scene.emplace<PlayerInput>(Player);
 
   return Player;
 }
 
-entt::entity CreatePrefabBullet(entt::registry& Scene, float x, float y, float Angle)
+entt::entity CreatePrefabBullet(entt::registry& Scene, float x, float y, float Angle,
+  uint8_t NetId)
 {
   entt::entity Bullet = Scene.create();
   Scene.emplace<BulletTag>(Bullet);
+  Scene.emplace<TeamId>(Bullet, NetId);
   Scene.emplace<Position>(Bullet, x, y);
   Scene.emplace<Direction>(Bullet, Angle);
   Scene.emplace<Collider>(Bullet, 4.0f);
+  Scene.emplace<Speed>(Bullet, 140.0f);
 
   return Bullet;
 }
@@ -307,7 +301,13 @@ int main()
         else if (PacketHeader == 1)
         {
           ClientShootingCommands* Cmd = (ClientShootingCommands*)Event.packet->data;
-          // Shooting logic here
+
+          auto& Pos = Scene.get<Position>(PeerData->Id);
+
+          CreatePrefabBullet(Scene, Pos.x, Pos.y, Cmd->Angle, PeerData->NetworkId);
+          
+          CreateBullet Msg = {4, PeerData->NetworkId, Pos.x, Pos.y, Cmd->Angle};
+          ServerBroadcastMessage<CreateBullet>(Msg, pServer);
         }
 
         enet_packet_destroy(Event.packet);
@@ -344,6 +344,9 @@ int main()
     InputToMovementSystem(Scene);
     DynamicMovementSystem(DeltaTime, Scene);
     KeepPlayerInBoundsSystem(Scene);
+    BulletMovementSystem(Scene, DeltaTime);
+    BulletDamageSystem(Scene, true);
+    RemoveBulletOutOfBoundsSystem(Scene);
 
     // Post Update
     ResetPlayerInputSystem(Scene);

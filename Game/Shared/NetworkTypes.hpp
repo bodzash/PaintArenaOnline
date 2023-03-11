@@ -60,3 +60,12 @@ struct UpdatePlayer
   float x;
   float y;
 };
+
+struct CreateBullet
+{
+  uint8_t Type = 4;
+  uint8_t Nid;
+  float x;
+  float y;
+  float Direction;
+};

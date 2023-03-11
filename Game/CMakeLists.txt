@@ -14,7 +14,7 @@ if(IS_CLIENT)
 
   add_executable(${PROJECT_NAME}
     Client/Source/Client.cpp
-    Client/Source/NetWork.cpp
+    Client/Source/Network.cpp
   )
 
   add_subdirectory(External/raylib)
@@ -36,7 +36,9 @@ else()
 
   project(Server)
 
-  add_executable(${PROJECT_NAME} Server/Source/Server.cpp)
+  add_executable(${PROJECT_NAME}
+    Server/Source/Server.cpp
+  )
 
   add_subdirectory(External/enet)
 

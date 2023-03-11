@@ -17,7 +17,7 @@ const int MaxNetworkClients = 6;
 std::array<RemotePeer, MaxNetworkClients> NetworkClients;
 
 bool bConnected = false;
-uint8_t SelfNetworkId = 10;
+uint8_t SelfNetworkId = 255;
 
 bool IsConnected()
 {
@@ -111,6 +111,20 @@ void PollNetwork(entt::registry& Scene)
         Pos.y = Msg->y;
         Hel.Current = Msg->Health;
       }
+      else if (PacketHeader == 4)
+      {
+        CreateBullet* Msg = (CreateBullet*)Event.packet->data;
+
+        entt::entity Bullet = Scene.create();
+        Scene.emplace<BulletTag>(Bullet);
+        Scene.emplace<TeamId>(Bullet, Msg->Nid);
+        Scene.emplace<Position>(Bullet, Msg->x, Msg->y);
+        Scene.emplace<Direction>(Bullet, Msg->Direction);
+        Scene.emplace<Speed>(Bullet, 140.0f);
+        Scene.emplace<Collider>(Bullet, 4.0f);
+        Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid]);
+        Scene.emplace<Shadow>(Bullet, "BulletShadow");
+      }
 
       enet_packet_destroy(Event.packet);
     }
@@ -121,7 +135,7 @@ void PollNetwork(entt::registry& Scene)
       std::cout << "Disconnect event recieved boss" << "\n";
 
       // Set connection state
-      SelfNetworkId = 10;
+      SelfNetworkId = 255;
       bConnected = false;
     }
     break;

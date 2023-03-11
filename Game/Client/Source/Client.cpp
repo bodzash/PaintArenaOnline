@@ -8,9 +8,7 @@
 #include "Network.hpp"
 #include "Components.hpp"
 #include "Math.hpp"
-
-std::array<std::string, 6> NetworkIdToBulletAsset = {"PinkBullet", "GreenBullet",
-  "RedBullet", "CyanBullet", "LimeBullet", "OrangeBullet"};
+#include "BulletSystem.hpp"
 
 using std::string;
 
@@ -95,87 +93,6 @@ void ColliderDebugRendererSystem(entt::registry& Scene)
   }
 }
 
-void BulletMovementSystem(entt::registry& Scene, float Delta)
-{
-  auto View = Scene.view<BulletTag, Position, Direction, Speed>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Dir = View.get<Direction>(Entity);
-    auto& Spd = View.get<Speed>(Entity);
-
-    // Move angle
-    Pos.x += (Spd.MaxSpeed * (float)cos(Dir.Angle)) * Delta;
-    Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)) * Delta;
-  }
-}
-
-void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, BulletTag>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    if (Pos.x < 0.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-    else if (Pos.x > 240.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-
-    if (Pos.y < 0.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-    else if (Pos.y > 176.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    } 
-  }
-}
-
-void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
-{
-  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
-  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health>();
-  for (auto Player : Players)
-  {
-    // Player
-    auto& PTid = Players.get<TeamId>(Player);
-    auto& PPos = Players.get<Position>(Player);
-    auto& PCol = Players.get<Collider>(Player);
-    auto& PHel = Players.get<Health>(Player);
-    
-    for (auto Bullet : Bullets)
-    {
-      // Bullet
-      auto& BTid = Players.get<TeamId>(Bullet);
-      auto& BPos = Players.get<Position>(Bullet);
-      auto& BCol = Players.get<Collider>(Bullet);
-
-      // Check if own
-      if (PTid.Team == BTid.Team) break;
-
-      // Check if dead
-      if (PHel.Current <= PHel.Min) break;
-
-      // Check for collision
-      if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
-      {
-        if (bCanDamage) PHel.Current -= 20;
-        Scene.destroy(Bullet);
-      }
-    }
-  }
-}
-
 int main(void)
 {
   const int ScreenWidth = 224;
@@ -197,6 +114,7 @@ int main(void)
   MainCamera.rotation = 0.0f;
   MainCamera.zoom = 4.0f;
 
+  // TODO cleanup
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
   TextureAssets["Cursor"] = {16, 12, 10, 10, 5, 5};
@@ -238,7 +156,7 @@ int main(void)
     // Network stuff
     PollNetwork(Scene);
 
-    // Need clean up
+    // TODO clean up
     if (IsConnected())
     {
       entt::entity MyPlayerId = GetSelfPlayerEntity();
@@ -249,26 +167,13 @@ int main(void)
       bool bDown = IsKeyDown(KEY_S);
 
       // Calculate angle
-      if (MyNetworkId != 10)
+      if (MyNetworkId != 255)
       {
         auto& Pos = Scene.get<Position>(MyPlayerId);
         float Angle = PointDirection(Pos.x, Pos.y, GetMouseX() / 4, GetMouseY() / 4);
         
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(3.32f);
-
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-        {
-          entt::entity Bullet = Scene.create();
-          Scene.emplace<BulletTag>(Bullet);
-          Scene.emplace<TeamId>(Bullet, MyNetworkId);
-          Scene.emplace<Position>(Bullet, Pos.x, Pos.y);
-          Scene.emplace<Direction>(Bullet, Angle);
-          Scene.emplace<Speed>(Bullet, 140.0f);
-          Scene.emplace<Collider>(Bullet, 4.0f);
-          Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)MyNetworkId]);
-          Scene.emplace<Shadow>(Bullet, "BulletShadow");
-        }
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
       }
     }
     
@@ -290,9 +195,10 @@ int main(void)
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    //HealthRendererSystem(Scene);
+    HealthRendererSystem(Scene);
     //ColliderDebugRendererSystem(Scene);
 
+    // Render cursor TODO cleanup
     DrawTextureRec(TextureAtlas, {TextureAssets["Cursor"].x, TextureAssets["Cursor"].y,
       TextureAssets["Cursor"].Width, TextureAssets["Cursor"].Height},
       {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
