@@ -10,7 +10,17 @@
 #include "Math.hpp"
 #include "BulletSystem.hpp"
 
+#define PlayerColorPink (Color){133, 45, 102, 255}
+#define PlayerColorGreen (Color){48, 156, 99, 255}
+#define PlayerColorRed (Color){201, 48, 56, 255}
+#define PlayerColorCyan (Color){99, 194, 201, 255}
+#define PlayerColorLime (Color){180, 214, 69, 255}
+#define PlayerColorOrange (Color){255, 173, 59, 255}
+
 using std::string;
+
+Color IndexToRGB[6] = {PlayerColorPink, PlayerColorGreen, PlayerColorRed,
+  PlayerColorCyan, PlayerColorLime, PlayerColorOrange};
 
 struct SpriteAsset
 {
@@ -35,6 +45,22 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
       Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
       {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
       WHITE);
+  }
+}
+
+void SmudgeRendererSystem(entt::registry& Scene, Texture2D Tex,
+  std::map<string, SpriteAsset>& Assets)
+{
+  auto View = Scene.view<Position, Smudge>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Spr = View.get<Smudge>(Entity);
+
+    DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
+      Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
+      {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
+      IndexToRGB[Spr.Color]);
   }
 }
 
@@ -138,6 +164,18 @@ int main(void)
   TextureAssets["LimeBullet"] = {16, 8, 4, 4, 2, 2};
   TextureAssets["OrangeBullet"] = {20, 8, 4, 4, 2, 2};
 
+  // Small Smudges
+  TextureAssets["SmallSmudge1"] = {26, 11, 8, 8, 4, 4};
+  TextureAssets["SmallSmudge2"] = {34, 11, 8, 8, 4, 4};
+  TextureAssets["SmallSmudge3"] = {42, 11, 8, 8, 4, 4};
+
+
+  // Big Smudges
+  TextureAssets["BigSmudge1"] = {0, 28, 16, 16, 8, 8};
+  TextureAssets["BigSmudge2"] = {16, 28, 16, 16, 8, 8};
+  TextureAssets["BigSmudge3"] = {32, 28, 16, 16, 8, 8};
+
+
   // Fill background
   for(int i = 0; i <= 14; i++)
   {
@@ -174,6 +212,20 @@ int main(void)
         
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
+
+        if (IsKeyPressed(KEY_F))
+        {
+          entt::entity Effect = Scene.create();
+          Scene.emplace<Position>(Effect, (float)GetMouseX() / 4, (float)GetMouseY() / 4);
+          Scene.emplace<Smudge>(Effect, "SmallSmudge1", (int)MyNetworkId);
+        }
+
+        if (IsKeyPressed(KEY_E))
+        {
+          entt::entity Effect = Scene.create();
+          Scene.emplace<Position>(Effect, (float)GetMouseX() / 4, (float)GetMouseY() / 4);
+          Scene.emplace<Smudge>(Effect, "BigSmudge1", (int)MyNetworkId);
+        }
       }
     }
     
@@ -193,6 +245,7 @@ int main(void)
     BeginMode2D(MainCamera);
 
     BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
+    SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
     HealthRendererSystem(Scene);

@@ -16,6 +16,12 @@ struct Sprite
   std::string Asset;
 };
 
+struct Smudge
+{
+  std::string Asset;
+  int Color;
+};
+
 struct Velocity
 {
   float x = 0.0f;
