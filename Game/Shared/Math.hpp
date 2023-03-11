@@ -21,6 +21,11 @@ float Approach(float Start, float End, float Shift)
   }
 }
 
+float Lerp(float First, float Second, float Amount)
+{
+  return First + (Second - First) * Amount;
+}
+
 int RandomRange(int Min, int Max)
 {
   return (rand() % (Max - Min)) + Min;
