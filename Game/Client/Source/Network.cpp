@@ -68,6 +68,8 @@ void PollNetwork(entt::registry& Scene)
       {
         CreatePlayer* Msg = (CreatePlayer*)Event.packet->data;
 
+        int Index = rand() % 3;
+
         // Create player
         entt::entity Player = Scene.create();
         Scene.emplace<PlayerTag>(Player);
@@ -117,6 +119,8 @@ void PollNetwork(entt::registry& Scene)
       {
         CreateBullet* Msg = (CreateBullet*)Event.packet->data;
 
+        int Index = rand() % 3;
+
         entt::entity Bullet = Scene.create();
         Scene.emplace<BulletTag>(Bullet);
         Scene.emplace<TeamId>(Bullet, Msg->Nid);
@@ -124,6 +128,7 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Direction>(Bullet, Msg->Direction);
         Scene.emplace<Speed>(Bullet, 140.0f);
         Scene.emplace<Collider>(Bullet, 4.0f);
+        Scene.emplace<Audio>(Bullet, (Index == 1) ? "Shoot1" : "Shoot2", true);
         Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid], 2.0f, 2.0f);
         Scene.emplace<Shadow>(Bullet, "BulletShadow");
       } else if (PacketHeader == 5)

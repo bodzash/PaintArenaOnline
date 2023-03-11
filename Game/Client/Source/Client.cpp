@@ -42,6 +42,7 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   entt::entity Effect = Scene.create();
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
+  Scene.emplace<Audio>(Effect, (Index == 1) ? "Splash1" : "Splash2", true);
 }
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
@@ -143,6 +144,18 @@ void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Asse
   }
 }
 
+void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
+{
+  auto View = Scene.view<Audio>();
+  for (auto Entity : View)
+  {
+    auto& Aud = View.get<Audio>(Entity);
+
+    PlaySound(Assets[Aud.Asset]);
+    Scene.remove<Audio>(Entity);
+  }
+}
+
 void ColliderDebugRendererSystem(entt::registry& Scene)
 {
   auto View = Scene.view<Position, Collider>();
@@ -163,12 +176,14 @@ int main(void)
   const int WindowHeight = 704;
 
   InitWindow(WindowWidth, WindowHeight, "Marble Shooter");
+  InitAudioDevice();
   SetTargetFPS(60);
   HideCursor();
 
   entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
+  std::map<string, Sound> AudioAssets;
   Camera2D MainCamera;
   MainCamera.target = {0.0f, 0.0f};
   MainCamera.offset = {0.0f, 0.0f};
@@ -204,12 +219,22 @@ int main(void)
   TextureAssets["SmallSmudge2"] = {34, 11, 8, 8, 4, 4};
   TextureAssets["SmallSmudge3"] = {42, 11, 8, 8, 4, 4};
 
-
   // Big Smudges
   TextureAssets["BigSmudge1"] = {0, 28, 16, 16, 8, 8};
   TextureAssets["BigSmudge2"] = {16, 28, 16, 16, 8, 8};
   TextureAssets["BigSmudge3"] = {32, 28, 16, 16, 8, 8};
 
+  // Shoot
+  AudioAssets["Shoot1"] = LoadSound("./Resources/Shoot1.ogg");
+  AudioAssets["Shoot2"] = LoadSound("./Resources/Shoot2.ogg");
+
+  // Hit
+  //AudioAssets["Hit1"] = LoadSound("./Resources/Hit1.ogg");
+  //AudioAssets["Hit2"] = LoadSound("./Resources/Hit2.ogg");
+
+  // Splash
+  AudioAssets["Splash1"] = LoadSound("./Resources/Splash1.ogg");
+  AudioAssets["Splash2"] = LoadSound("./Resources/Splash2.ogg");
 
   // Fill background
   for(int i = 0; i <= 14; i++)
@@ -248,8 +273,8 @@ int main(void)
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
 
-        //if (IsKeyPressed(KEY_F)) CreatePrefabSmudge(Scene, MyNetworkId, true);
-        //if (IsKeyPressed(KEY_E)) CreatePrefabSmudge(Scene, MyNetworkId, false);
+        //if (IsKeyPressed(KEY_F)) PlaySound(AudioAssets["Shoot1"]);
+        //if (IsKeyPressed(KEY_E)) PlaySound(AudioAssets["Splash1"]);
       }
     }
     
@@ -262,6 +287,7 @@ int main(void)
     BulletDamageSystem(Scene, false);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
+    AudioPlayerSystem(Scene, AudioAssets);
 
     // Render
     BeginDrawing();
@@ -296,5 +322,6 @@ int main(void)
 
   Disconnect();
   DeInitENet();
+  CloseAudioDevice();
   CloseWindow();
 }

@@ -20,6 +20,12 @@ struct Sprite
   float OgOffsetY = OffsetY;
 };
 
+struct Audio
+{
+  std::string Asset;
+  bool bIsPlaying = false;
+};
+
 struct Smudge
 {
   std::string Asset;
