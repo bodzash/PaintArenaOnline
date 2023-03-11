@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+
 #include "enet/enet.h"
 
 #include "Network.hpp"
@@ -124,6 +126,28 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Collider>(Bullet, 4.0f);
         Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid]);
         Scene.emplace<Shadow>(Bullet, "BulletShadow");
+      } else if (PacketHeader == 5)
+      {
+        DeathPlayer* Msg = (DeathPlayer*)Event.packet->data;
+
+        // Create Big smudge
+        int Index = rand() % 3;
+
+        string Asset = "BigSmudge1";
+        if (Index == 1) Asset = "BigSmudge2";
+        else if (Index == 2) Asset = "BigSmudge3";
+
+        entt::entity Effect = Scene.create();
+        Scene.emplace<Position>(Effect, Msg->x, Msg->y);
+        Scene.emplace<Smudge>(Effect, Asset, (int)Msg->Nid);
+
+        // Create smudge balls
+        /*
+        for (int i = 0; i < 5; i++)
+        {
+
+        }
+        */
       }
 
       enet_packet_destroy(Event.packet);

@@ -7,7 +7,6 @@
 
 #include "Network.hpp"
 #include "Components.hpp"
-#include "Math.hpp"
 #include "BulletSystem.hpp"
 
 #define PlayerColorPink (Color){133, 45, 102, 255}
@@ -31,6 +30,28 @@ struct SpriteAsset
   float OffsetX = 0.0f;
   float OffsetY = 0.0f;
 };
+
+/*
+void CreatePrefabSmudge(entt::registry& Scene, float x, float y,
+  uint8_t NetId, bool bIsBig)
+{
+  int Index = RandomInt(3);
+
+  string Asset = bIsBig ? "BigSmudge1" : "SmallSmudge1";
+  if (Index == 1) Asset = bIsBig ? "BigSmudge2" : "SmallSmudge2";
+  else if (Index == 2) Asset = bIsBig ? "BigSmudge3" : "SmallSmudge3";
+
+  entt::entity Effect = Scene.create();
+  Scene.emplace<Position>(Effect, x, y);
+  Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
+}
+
+void CreatePrefabSmudgeBall(entt::registry& Scene, float x, float y,
+  uint8_t NetId, float Direction)
+{
+
+}
+*/
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
   std::map<string, SpriteAsset>& Assets)
@@ -94,7 +115,7 @@ void BackgroundRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
-void HealthRendererSystem(entt::registry& Scene)
+void HealthDebugRendererSystem(entt::registry& Scene)
 {
   auto View = Scene.view<Position, Health>();
   for (auto Entity : View)
@@ -106,6 +127,27 @@ void HealthRendererSystem(entt::registry& Scene)
     //DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
   }
 }
+
+// Delete this system later or change it
+/*
+void DeathEffectSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Health, Position, NetworkId>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Hel = View.get<Health>(Entity);
+    auto& Nid = View.get<NetworkId>(Entity);
+
+    if (Hel.Current <= Hel.Min && !Hel.IsDead)
+    {
+      Hel.IsDead = true;
+      CreatePrefabSmudge(Scene, Pos.x, Pos.y, Nid.Id, true);
+      // Drop 4-5 Smudge balls that explode on death
+    }
+  }
+}
+*/
 
 void ColliderDebugRendererSystem(entt::registry& Scene)
 {
@@ -213,19 +255,8 @@ int main(void)
         if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
 
-        if (IsKeyPressed(KEY_F))
-        {
-          entt::entity Effect = Scene.create();
-          Scene.emplace<Position>(Effect, (float)GetMouseX() / 4, (float)GetMouseY() / 4);
-          Scene.emplace<Smudge>(Effect, "SmallSmudge1", (int)MyNetworkId);
-        }
-
-        if (IsKeyPressed(KEY_E))
-        {
-          entt::entity Effect = Scene.create();
-          Scene.emplace<Position>(Effect, (float)GetMouseX() / 4, (float)GetMouseY() / 4);
-          Scene.emplace<Smudge>(Effect, "BigSmudge1", (int)MyNetworkId);
-        }
+        //if (IsKeyPressed(KEY_F)) CreatePrefabSmudge(Scene, MyNetworkId, true);
+        //if (IsKeyPressed(KEY_E)) CreatePrefabSmudge(Scene, MyNetworkId, false);
       }
     }
     
@@ -248,7 +279,7 @@ int main(void)
     SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    HealthRendererSystem(Scene);
+    //HealthDebugRendererSystem(Scene);
     //ColliderDebugRendererSystem(Scene);
 
     // Render cursor TODO cleanup

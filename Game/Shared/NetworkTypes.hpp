@@ -69,3 +69,11 @@ struct CreateBullet
   float y;
   float Direction;
 };
+
+struct DeathPlayer
+{
+  uint8_t Type = 5;
+  uint8_t Nid;
+  float x;
+  float y;
+};
