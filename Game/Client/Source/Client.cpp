@@ -153,7 +153,7 @@ void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
 
     if (Aud.bIsPlaying)
     {
-      int Rnd = RandomInt(3);
+      int Rnd = RandomInt(2);
 
       PlaySound(Assets[(Rnd == 1) ? Aud.Asset1 : Aud.Asset2]);
       Aud.bIsPlaying = false;
