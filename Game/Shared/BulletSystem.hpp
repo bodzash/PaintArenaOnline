@@ -7,7 +7,8 @@
 
 void BulletMovementSystem(entt::registry& Scene, float Delta)
 {
-  auto View = Scene.view<BulletTag, Position, Direction, Speed>();
+  //BulletTag
+  auto View = Scene.view<Position, Direction, Speed>();
   for (auto Entity : View)
   {
     auto& Pos = View.get<Position>(Entity);

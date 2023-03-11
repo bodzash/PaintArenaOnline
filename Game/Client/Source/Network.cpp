@@ -76,7 +76,8 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Collider>(Player, 8.0f);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
-        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid]);
+        Scene.emplace<Shake>(Player);
+        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid], 4.0f, 4.0f);
         Scene.emplace<Shadow>(Player, "PlayerShadow");
 
         // Handle slot
@@ -124,7 +125,7 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Direction>(Bullet, Msg->Direction);
         Scene.emplace<Speed>(Bullet, 140.0f);
         Scene.emplace<Collider>(Bullet, 4.0f);
-        Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid]);
+        Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid], 2.0f, 2.0f);
         Scene.emplace<Shadow>(Bullet, "BulletShadow");
       } else if (PacketHeader == 5)
       {
@@ -142,12 +143,17 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Smudge>(Effect, Asset, (int)Msg->Nid);
 
         // Create smudge balls
-        /*
         for (int i = 0; i < 5; i++)
         {
-
+          entt::entity Ball = Scene.create();
+          Scene.emplace<Position>(Ball, Msg->x, Msg->y);
+          Scene.emplace<Direction>(Ball, (float)(rand() % 628) / 100.0f);
+          Scene.emplace<Speed>(Ball, (float)((rand() % 130 - 80) + 80));
+          Scene.emplace<TeamId>(Ball, Msg->Nid);
+          Scene.emplace<Sprite>(Ball, NetworkIdToBulletAsset[(int)Msg->Nid], 2.0f, 2.0f);
+          Scene.emplace<Shadow>(Ball, "BulletShadow");
+          Scene.emplace<SmudgeBall>(Ball, 5.0f + (float)(rand() % 10));
         }
-        */
       }
 
       enet_packet_destroy(Event.packet);

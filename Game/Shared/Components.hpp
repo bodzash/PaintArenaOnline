@@ -14,12 +14,25 @@ struct Position
 struct Sprite
 {
   std::string Asset;
+  float OffsetX = 0.0f;
+  float OffsetY = 0.0f;
+};
+
+struct Shake
+{
+  float x = 0.0f;
+  float y = 0.0f;
 };
 
 struct Smudge
 {
   std::string Asset;
   int Color;
+};
+
+struct SmudgeBall
+{
+  float Height;
 };
 
 struct Velocity

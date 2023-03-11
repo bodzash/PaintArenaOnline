@@ -31,27 +31,18 @@ struct SpriteAsset
   float OffsetY = 0.0f;
 };
 
-/*
-void CreatePrefabSmudge(entt::registry& Scene, float x, float y,
-  uint8_t NetId, bool bIsBig)
+void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t NetId)
 {
   int Index = RandomInt(3);
 
-  string Asset = bIsBig ? "BigSmudge1" : "SmallSmudge1";
-  if (Index == 1) Asset = bIsBig ? "BigSmudge2" : "SmallSmudge2";
-  else if (Index == 2) Asset = bIsBig ? "BigSmudge3" : "SmallSmudge3";
+  string Asset = "SmallSmudge1";
+  if (Index == 1) Asset = "SmallSmudge2";
+  else if (Index == 2) Asset = "SmallSmudge3";
 
   entt::entity Effect = Scene.create();
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
 }
-
-void CreatePrefabSmudgeBall(entt::registry& Scene, float x, float y,
-  uint8_t NetId, float Direction)
-{
-
-}
-*/
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
   std::map<string, SpriteAsset>& Assets)
@@ -64,7 +55,7 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
 
     DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
       Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
-      {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
+      {Pos.x - Spr.OffsetX, Pos.y - Spr.OffsetY},
       WHITE);
   }
 }
@@ -128,26 +119,41 @@ void HealthDebugRendererSystem(entt::registry& Scene)
   }
 }
 
-// Delete this system later or change it
-/*
-void DeathEffectSystem(entt::registry& Scene)
+void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Assets)
 {
-  auto View = Scene.view<Health, Position, NetworkId>();
+  auto View = Scene.view<Position, SmudgeBall, Sprite, TeamId, Speed>();
   for (auto Entity : View)
   {
     auto& Pos = View.get<Position>(Entity);
-    auto& Hel = View.get<Health>(Entity);
-    auto& Nid = View.get<NetworkId>(Entity);
+    auto& Smb = View.get<SmudgeBall>(Entity);
+    auto& Spr = View.get<Sprite>(Entity);
+    auto& Spd = View.get<Speed>(Entity);
+    auto& Tid = View.get<TeamId>(Entity);
 
-    if (Hel.Current <= Hel.Min && !Hel.IsDead)
+    Spr.OffsetY = Smb.Height;
+
+    Spd.MaxSpeed *= 0.9f;
+    Smb.Height -= 0.7f;
+
+    if (Smb.Height < -1.0f)
     {
-      Hel.IsDead = true;
-      CreatePrefabSmudge(Scene, Pos.x, Pos.y, Nid.Id, true);
-      // Drop 4-5 Smudge balls that explode on death
+      CreatePrefabSmudgeSmall(Scene, Pos.x, Pos.y, Tid.Team);
+      Scene.destroy(Entity);
     }
   }
 }
-*/
+
+void SpriteShakeSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Shake>();
+  for (auto Entity : View)
+  {
+    auto& Shk = View.get<Shake>(Entity);
+
+    Shk.x = Approach(Shk.x, 0.0f, 1.0f);
+    Shk.y = Approach(Shk.y, 0.0f, 1.0f);
+  }
+}
 
 void ColliderDebugRendererSystem(entt::registry& Scene)
 {
@@ -173,10 +179,9 @@ int main(void)
   HideCursor();
 
   entt::registry Scene;
-  Camera2D MainCamera;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
-
+  Camera2D MainCamera;
   MainCamera.target = {0.0f, 0.0f};
   MainCamera.offset = {0.0f, 0.0f};
   MainCamera.rotation = 0.0f;
@@ -268,6 +273,7 @@ int main(void)
     BulletMovementSystem(Scene, GetFrameTime());
     BulletDamageSystem(Scene, false);
     RemoveBulletOutOfBoundsSystem(Scene);
+    SmudgeBallSystem(Scene, TextureAssets);
 
     // Render
     BeginDrawing();
