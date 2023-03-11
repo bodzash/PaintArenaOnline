@@ -76,7 +76,6 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Collider>(Player, 8.0f);
         Scene.emplace<Health>(Player, 0, 100, Msg->Health);
-        Scene.emplace<Shake>(Player);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid], 4.0f, 4.0f);
         Scene.emplace<Shadow>(Player, "PlayerShadow");
 

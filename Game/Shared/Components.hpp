@@ -16,12 +16,8 @@ struct Sprite
   std::string Asset;
   float OffsetX = 0.0f;
   float OffsetY = 0.0f;
-};
-
-struct Shake
-{
-  float x = 0.0f;
-  float y = 0.0f;
+  float OgOffsetX = OffsetX;
+  float OgOffsetY = OffsetY;
 };
 
 struct Smudge

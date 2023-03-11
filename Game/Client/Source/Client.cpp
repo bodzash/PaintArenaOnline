@@ -143,18 +143,6 @@ void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Asse
   }
 }
 
-void SpriteShakeSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Shake>();
-  for (auto Entity : View)
-  {
-    auto& Shk = View.get<Shake>(Entity);
-
-    Shk.x = Approach(Shk.x, 0.0f, 1.0f);
-    Shk.y = Approach(Shk.y, 0.0f, 1.0f);
-  }
-}
-
 void ColliderDebugRendererSystem(entt::registry& Scene)
 {
   auto View = Scene.view<Position, Collider>();
