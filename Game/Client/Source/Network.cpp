@@ -76,8 +76,10 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Collider>(Player, 8.0f);
         Scene.emplace<Audio>(Player, "Hit1", "Hit2", false, false);
-        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid], 4.0f, 4.0f);
+        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid],
+          4.0f, 4.0f, 4.0f, 4.0f);
         Scene.emplace<Shadow>(Player, "PlayerShadow");
+        Scene.emplace<Shake>(Player);
 
         // Handle slot
         NetworkClients[Msg->Nid].Id = Player;
@@ -115,6 +117,9 @@ void PollNetwork(entt::registry& Scene)
       {
         CreateBullet* Msg = (CreateBullet*)Event.packet->data;
 
+        auto& Shk = Scene.get<Shake>(NetworkClients[(int)Msg->Nid].Id);
+        Shk.Amount = 0.6f;
+
         entt::entity Bullet = Scene.create();
         Scene.emplace<BulletTag>(Bullet);
         Scene.emplace<TeamId>(Bullet, Msg->Nid);
@@ -129,9 +134,11 @@ void PollNetwork(entt::registry& Scene)
       {
         DeathPlayer* Msg = (DeathPlayer*)Event.packet->data;
 
+        auto& Shk = Scene.get<Shake>(NetworkClients[(int)Msg->Nid].Id);
+        Shk.Amount = 0.0f;
+
         // Create Big smudge
         int Index = rand() % 3;
-
         string Asset = "BigSmudge1";
         if (Index == 1) Asset = "BigSmudge2";
         else if (Index == 2) Asset = "BigSmudge3";

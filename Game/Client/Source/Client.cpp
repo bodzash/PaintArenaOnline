@@ -152,7 +152,7 @@ void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
 void ClientBulletDamageSystem(entt::registry& Scene)
 {
   auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
-  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Audio>();
+  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Shake, Audio>();
   for (auto Player : Players)
   {
     // Player
@@ -160,6 +160,7 @@ void ClientBulletDamageSystem(entt::registry& Scene)
     auto& PPos = Players.get<Position>(Player);
     auto& PCol = Players.get<Collider>(Player);
     auto& PAud = Players.get<Audio>(Player);
+    auto& PShk = Players.get<Shake>(Player);
     
     for (auto Bullet : Bullets)
     {
@@ -174,9 +175,33 @@ void ClientBulletDamageSystem(entt::registry& Scene)
       // Check for collision
       if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
       {
+        PShk.Amount = 2.4f;
         PAud.bIsPlaying = true;
         Scene.destroy(Bullet);
       }
+    }
+  }
+}
+
+void ShakeSpriteSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Sprite, Shake>();
+  for (auto Entity : View)
+  {
+    auto& Spr = View.get<Sprite>(Entity);
+    auto& Shk = View.get<Shake>(Entity);
+
+    if (Shk.Amount <= 0.0f)
+    {
+      Shk.Amount = 0.0f;
+      Spr.OffsetX = Spr.OgOffsetX;
+      Spr.OffsetY = Spr.OgOffsetY;
+    }
+    else
+    {
+      Spr.OffsetX = RandomRange(-Shk.Amount, Shk.Amount) + Spr.OgOffsetX;
+      Spr.OffsetY = RandomRange(-Shk.Amount, Shk.Amount) + Spr.OgOffsetY;
+      Shk.Amount -= 0.4f;
     }
   }
 }
@@ -314,6 +339,7 @@ int main(void)
     ClientBulletDamageSystem(Scene);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
+    ShakeSpriteSystem(Scene);
 
     // Render
     BeginDrawing();

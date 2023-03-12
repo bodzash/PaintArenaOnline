@@ -72,8 +72,7 @@ struct Shadow
 
 struct Shake
 {
-  float x = 0.0f;
-  float y = 0.0f;
+  float Amount = 0.0f;
 };
 
 struct Direction

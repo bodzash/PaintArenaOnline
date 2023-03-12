@@ -31,6 +31,11 @@ int RandomRange(int Min, int Max)
   return (rand() % (Max - Min)) + Min;
 }
 
+float RandomRange(float Min, float Max)
+{
+  return (Max - Min) * ((float)(rand()) / (float)(RAND_MAX)) + Min;
+}
+
 int RandomInt(int Max)
 {
   return rand() % Max;
