@@ -225,8 +225,9 @@ int main(void)
   const int WindowWidth = 960;
   const int WindowHeight = 704;
 
-  InitWindow(WindowWidth, WindowHeight, "Marble Shooter");
+  InitWindow(WindowWidth, WindowHeight, "Paint Arena Online");
   InitAudioDevice();
+  SetWindowIcon(LoadImage("./Resources/WindowIcon.png"));
   SetTargetFPS(60);
   HideCursor();
 

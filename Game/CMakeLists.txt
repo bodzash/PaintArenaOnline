@@ -9,12 +9,10 @@ option(IS_CLIENT ON)
 if(IS_CLIENT)
 
   project(Client)
-
-  set(CMAKE_CXX_FLAGS "-mwindows")
-
+  
   add_executable(${PROJECT_NAME}
-    Client/Source/Client.cpp
-    Client/Source/Network.cpp
+  Client/Source/Client.cpp
+  Client/Source/Network.cpp
   )
 
   add_subdirectory(External/raylib)
@@ -31,6 +29,8 @@ if(IS_CLIENT)
   target_link_directories(${PROJECT_NAME} PUBLIC raylib/raylib PUBLIC enet)
 
   target_link_libraries(${PROJECT_NAME} raylib enet)
+
+  set(CMAKE_CXX_FLAGS "-mwindows MetadataClient.res")
 
 else()
 
@@ -52,6 +52,8 @@ else()
   target_link_directories(${PROJECT_NAME} PUBLIC enet)
 
   target_link_libraries(${PROJECT_NAME} enet)
+
+  set(CMAKE_CXX_FLAGS "MetadataServer.res")
 
 endif(IS_CLIENT)
 unset(IS_CLIENT CACHE)

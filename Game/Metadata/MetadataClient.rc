@@ -1,0 +1,24 @@
+icon ICON "IconClient.ico"
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Laszlo Bozzay"
+      VALUE "FileDescription", "Paint Arena Game Client"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "Client"
+      VALUE "LegalCopyright", "Laszlo Bozzay"
+      VALUE "OriginalFilename", "Client.exe"
+      VALUE "ProductName", "Paint Arena Online"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
