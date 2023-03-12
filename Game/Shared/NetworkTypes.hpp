@@ -41,7 +41,6 @@ struct CreatePlayer
 {
   uint8_t Type = 1;
   uint8_t Nid;
-  int Health;
   float x;
   float y;
 };
@@ -56,7 +55,6 @@ struct UpdatePlayer
 {
   uint8_t Type = 3;
   uint8_t Nid;
-  int Health;
   float x;
   float y;
 };

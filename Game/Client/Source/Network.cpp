@@ -75,7 +75,6 @@ void PollNetwork(entt::registry& Scene)
         Scene.emplace<NetworkId>(Player, Msg->Nid);
         Scene.emplace<Position>(Player, Msg->x, Msg->y);
         Scene.emplace<Collider>(Player, 8.0f);
-        Scene.emplace<Health>(Player, 0, 100, Msg->Health);
         Scene.emplace<Audio>(Player, "Hit1", "Hit2", false, false);
         Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid], 4.0f, 4.0f);
         Scene.emplace<Shadow>(Player, "PlayerShadow");
@@ -108,11 +107,9 @@ void PollNetwork(entt::registry& Scene)
         // Apply updates
         entt::entity Player = NetworkClients[Msg->Nid].Id;
         auto& Pos = Scene.get<Position>(Player);
-        auto& Hel = Scene.get<Health>(Player);
 
         Pos.x = Msg->x;
         Pos.y = Msg->y;
-        Hel.Current = Msg->Health;
       }
       else if (PacketHeader == 4)
       {

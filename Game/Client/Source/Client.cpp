@@ -107,19 +107,6 @@ void BackgroundRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
-void HealthDebugRendererSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, Health>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Hel = View.get<Health>(Entity);
-
-    DrawText(std::to_string(Hel.Current).c_str(), Pos.x + 12, Pos.y, 8, BLACK);
-    //DrawText(std::to_string(Pos.y).c_str(), Pos.x + 12, Pos.y + 10, 8, BLACK);
-  }
-}
-
 void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Assets)
 {
   auto View = Scene.view<Position, SmudgeBall, Sprite, TeamId, Speed>();
@@ -158,6 +145,38 @@ void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
       PlaySound(Assets[(Rnd == 1) ? Aud.Asset1 : Aud.Asset2]);
       Aud.bIsPlaying = false;
       if (Aud.bOneTime) Scene.remove<Audio>(Entity);
+    }
+  }
+}
+
+void ClientBulletDamageSystem(entt::registry& Scene)
+{
+  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
+  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Audio>();
+  for (auto Player : Players)
+  {
+    // Player
+    auto& PTid = Players.get<TeamId>(Player);
+    auto& PPos = Players.get<Position>(Player);
+    auto& PCol = Players.get<Collider>(Player);
+    auto& PAud = Players.get<Audio>(Player);
+    
+    for (auto Bullet : Bullets)
+    {
+      // Bullet
+      auto& BTid = Players.get<TeamId>(Bullet);
+      auto& BPos = Players.get<Position>(Bullet);
+      auto& BCol = Players.get<Collider>(Bullet);
+
+      // Check if own or Dead
+      if (PTid.Team == BTid.Team) break;
+
+      // Check for collision
+      if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
+      {
+        PAud.bIsPlaying = true;
+        Scene.destroy(Bullet);
+      }
     }
   }
 }
@@ -292,7 +311,7 @@ int main(void)
     // Update
     AudioPlayerSystem(Scene, AudioAssets);
     BulletMovementSystem(Scene, GetFrameTime());
-    BulletDamageSystem(Scene, false);
+    ClientBulletDamageSystem(Scene);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
 
@@ -306,7 +325,6 @@ int main(void)
     SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
     ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
     SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    //HealthDebugRendererSystem(Scene);
     //ColliderDebugRendererSystem(Scene);
 
     // Render cursor TODO cleanup

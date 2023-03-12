@@ -63,12 +63,17 @@ struct Health
   int Min = 0;
   int Max = 100;
   int Current = Max;
-  bool IsDead = false;
 };
 
 struct Shadow
 {
   std::string Asset;
+};
+
+struct Shake
+{
+  float x = 0.0f;
+  float y = 0.0f;
 };
 
 struct Direction

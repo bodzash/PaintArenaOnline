@@ -5,9 +5,9 @@
 #include "Components.hpp"
 #include "Math.hpp"
 
+// TODO rename directionalmovementsystem
 void BulletMovementSystem(entt::registry& Scene, float Delta)
 {
-  //BulletTag
   auto View = Scene.view<Position, Direction, Speed>();
   for (auto Entity : View)
   {
@@ -52,10 +52,10 @@ void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
   }
 }
 
-void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
+void ServerBulletDamageSystem(entt::registry& Scene)
 {
   auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
-  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health, Audio>();
+  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Health>();
   for (auto Player : Players)
   {
     // Player
@@ -63,7 +63,6 @@ void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
     auto& PPos = Players.get<Position>(Player);
     auto& PCol = Players.get<Collider>(Player);
     auto& PHel = Players.get<Health>(Player);
-    auto& PAud = Players.get<Audio>(Player);
     
     for (auto Bullet : Bullets)
     {
@@ -78,8 +77,7 @@ void BulletDamageSystem(entt::registry& Scene, bool bCanDamage)
       // Check for collision
       if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
       {
-        if (bCanDamage) PHel.Current -= 20;
-        PAud.bIsPlaying = true;
+        PHel.Current -= 20;
         Scene.destroy(Bullet);
       }
     }

@@ -82,15 +82,14 @@ void KeepPlayerInBoundsSystem(entt::registry& Scene)
 
 void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
 {
-  auto View = Scene.view<Position, Health, NetworkId>();
+  auto View = Scene.view<Position, NetworkId>();
   for (auto Entity : View)
   {
     auto& Pos = View.get<Position>(Entity);
-    auto& Hel = View.get<Health>(Entity);
     auto& Nid = View.get<NetworkId>(Entity);
 
     // Send out info
-    UpdatePlayer Msg = {3, (uint8_t)Nid.Id, Hel.Current, Pos.x, Pos.y};
+    UpdatePlayer Msg = {3, (uint8_t)Nid.Id, Pos.x, Pos.y};
     ServerBroadcastMessage<UpdatePlayer>(Msg, Server);
   }
 }
@@ -166,7 +165,6 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
   Scene.emplace<Velocity>(Player);
   Scene.emplace<Speed>(Player, 140.0f, 45.0f, 27.0f);
   Scene.emplace<Collider>(Player, 8.0f);
-  Scene.emplace<Audio>(Player, "", "", false, false); // Sadly this has to be done
   Scene.emplace<Health>(Player, 0, 100);
   Scene.emplace<PlayerInput>(Player);
 
@@ -281,7 +279,7 @@ int main()
                 auto& Pos = Scene.get<Position>(NetworkClients[j].Id);
                 auto& Hel = Scene.get<Health>(NetworkClients[j].Id);
 
-                CreatePlayer Msg = {1, (uint8_t)j, Hel.Current, Pos.x, Pos.y};
+                CreatePlayer Msg = {1, (uint8_t)j, Pos.x, Pos.y};
                 ServerSendMessage<CreatePlayer>(Msg, Event.peer);
               }
             }
@@ -291,7 +289,7 @@ int main()
               auto& Pos = Scene.get<Position>(NetworkClients[i].Id);
               auto& Hel = Scene.get<Health>(NetworkClients[i].Id);
 
-              CreatePlayer Msg = {1, (uint8_t)i, Hel.Current, Pos.x, Pos.y};
+              CreatePlayer Msg = {1, (uint8_t)i, Pos.x, Pos.y};
               ServerBroadcastMessage<CreatePlayer>(Msg, pServer);
             }
 
@@ -367,16 +365,13 @@ int main()
     DynamicMovementSystem(DeltaTime, Scene);
     KeepPlayerInBoundsSystem(Scene);
     BulletMovementSystem(Scene, DeltaTime);
-    BulletDamageSystem(Scene, true);
+    ServerBulletDamageSystem(Scene);
     HealthDeathSystem(Scene, pServer);
     RemoveBulletOutOfBoundsSystem(Scene);
 
     // Post Update
     ResetPlayerInputSystem(Scene);
     NetworkPlayerUpdateSystem(Scene, pServer);
-
-    // For fast shutdown
-    if (GetKeyState(VK_SPACE)) return 1; // TODO Remove this
   }
 
   // Cleanup
