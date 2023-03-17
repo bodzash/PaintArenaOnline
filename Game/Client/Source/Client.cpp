@@ -220,6 +220,7 @@ void ColliderDebugRendererSystem(entt::registry& Scene)
 
 int main(void)
 {
+  // Init
   const int ScreenWidth = 224;
   const int ScreenHeight = 160;
   const int WindowWidth = 960;
@@ -241,7 +242,6 @@ int main(void)
   MainCamera.rotation = 0.0f;
   MainCamera.zoom = 4.0f;
 
-  // TODO cleanup
   // Misc
   TextureAssets["FloorTile"] = {0, 12, 16, 16};
   TextureAssets["Cursor"] = {16, 12, 10, 10, 5, 5};
@@ -255,7 +255,6 @@ int main(void)
   TextureAssets["CyanPlayer"] = {24, 0, 8, 8, 4, 4};
   TextureAssets["LimePlayer"] = {32, 0, 8, 8, 4, 4};
   TextureAssets["OrangePlayer"] = {40, 0, 8, 8, 4, 4};
-
 
   // Bullets
   TextureAssets["PinkBullet"] = {0, 8, 4, 4, 2, 2};
@@ -298,14 +297,16 @@ int main(void)
     }
   }
 
+  // Connect to server
   ConnectToServer();
   
+  // Game loop
   while (!WindowShouldClose())
   {
-    // Network stuff
+    // Network
     PollNetwork(Scene);
 
-    // TODO clean up
+    // Input TODO clean up
     if (IsConnected())
     {
       entt::entity MyPlayerId = GetSelfPlayerEntity();
@@ -326,8 +327,6 @@ int main(void)
       }
     }
 
-    //SetMasterVolume
-    
     // Debug
     //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
     //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
@@ -344,34 +343,26 @@ int main(void)
 
     // Render
     BeginDrawing();
-    ClearBackground({167, 167, 167, 255});
-    
-    BeginMode2D(MainCamera);
-
-    BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
-    SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
-    ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
-    SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-    //ColliderDebugRendererSystem(Scene);
-
-    // Render cursor TODO cleanup
-    DrawTextureRec(TextureAtlas, {TextureAssets["Cursor"].x, TextureAssets["Cursor"].y,
-      TextureAssets["Cursor"].Width, TextureAssets["Cursor"].Height},
-      {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
-
-    EndMode2D();
-
-    DrawFPS(8, 4);
-    DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
-     IsConnected() ? GREEN : RED);
-    /*
-    DrawText(std::to_string(GetMouseX() / 4).c_str(), 8, 32, 24, BLACK);
-    DrawText(std::to_string(GetMouseY() / 4).c_str(), 8, 64, 24, BLACK);
-    */
-
+      ClearBackground({167, 167, 167, 255});
+      BeginMode2D(MainCamera);
+        BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
+        SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
+        ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
+        SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
+        //ColliderDebugRendererSystem(Scene);
+        // Render cursor TODO cleanup
+        DrawTextureRec(TextureAtlas, {TextureAssets["Cursor"].x,
+          TextureAssets["Cursor"].y, TextureAssets["Cursor"].Width,
+          TextureAssets["Cursor"].Height},
+          {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
+      EndMode2D();
+      DrawFPS(8, 4);
+      DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
+      IsConnected() ? GREEN : RED);
     EndDrawing();
   }
 
+  // Cleanup
   Disconnect();
   DeInitENet();
   CloseAudioDevice();
