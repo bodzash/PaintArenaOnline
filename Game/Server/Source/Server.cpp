@@ -14,6 +14,7 @@
 #include "Systems/BulletSystems.hpp"
 #include "Systems/MovementSystems.hpp"
 #include "Systems/BoundsSystems.hpp"
+#include "Systems/ServerInputSystems.hpp"
 
 using std::string;
 using namespace std::chrono;
@@ -46,35 +47,6 @@ void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
   }
 }
 
-void InputToMovementSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<PlayerInput, Velocity, Speed>();
-  for (auto Entity : View)
-  {
-    auto& Inp = Scene.get<PlayerInput>(Entity);
-    auto& Vel = View.get<Velocity>(Entity);
-    auto& Spd = View.get<Speed>(Entity);
-
-    // Input will serve as impulse force
-    float InputX = Inp.bRight - Inp.bLeft;
-    float InputY = Inp.bDown - Inp.bUp;
-
-    // Apply impulse force to velocity
-    Vel.x += InputX * std::min(Spd.Acceleration, Spd.MaxSpeed - abs(Vel.x));
-    Vel.y += InputY * std::min(Spd.Acceleration, Spd.MaxSpeed - abs(Vel.y));;
-  }
-}
-
-void ResetPlayerInputSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<PlayerInput>();
-  for (auto Entity : View)
-  {
-    auto& Inp = View.get<PlayerInput>(Entity);
-    Inp = PlayerInput();
-  }
-}
-
 void HealthDeathSystem(entt::registry& Scene, ENetHost* Server)
 {
   auto View = Scene.view<Health, Position, NetworkId>();
@@ -94,17 +66,6 @@ void HealthDeathSystem(entt::registry& Scene, ENetHost* Server)
       Pos.y = (float)RandomRange(4, 172);
     }
   }
-}
-
-void ApplyNetworkInputToPlayer(entt::registry& Scene, entt::entity Player,
-  ClientMovementCommands* Cmd)
-{
-  auto& Inp = Scene.get<PlayerInput>(Player);
-
-  Inp.bDown = Cmd->bDown;
-  Inp.bUp = Cmd->bUp;
-  Inp.bLeft = Cmd->bLeft;
-  Inp.bRight = Cmd->bRight;
 }
 
 entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)

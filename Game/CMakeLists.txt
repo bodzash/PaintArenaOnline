@@ -51,6 +51,7 @@ else()
   add_executable(${PROJECT_NAME}
     # Server
     Server/Source/Server.cpp
+    Server/Source/Systems/ServerInputSystems.cpp
     #Timing
     # Shared
     Shared/Source/Math.cpp
