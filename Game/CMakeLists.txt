@@ -11,8 +11,9 @@ if(IS_CLIENT)
   project(Client)
   
   add_executable(${PROJECT_NAME}
-  Client/Source/Client.cpp
-  Client/Source/Network.cpp
+    Client/Source/Client.cpp
+    Client/Source/Network.cpp
+    Client/Source/Console.cpp
   )
 
   add_subdirectory(External/raylib)

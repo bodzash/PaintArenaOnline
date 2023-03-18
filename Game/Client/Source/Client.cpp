@@ -5,6 +5,7 @@
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
+#include "Console.hpp"
 #include "Network.hpp"
 #include "Components.hpp"
 #include "BulletSystem.hpp"
@@ -45,7 +46,7 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
 }
 
-void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
+void SpriteRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets)
 {
   auto View = Scene.view<Position, Sprite>();
@@ -61,7 +62,7 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
-void SmudgeRendererSystem(entt::registry& Scene, Texture2D Tex,
+void SmudgeRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets)
 {
   auto View = Scene.view<Position, Smudge>();
@@ -77,7 +78,7 @@ void SmudgeRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
-void ShadowRendererSystem(entt::registry& Scene, Texture2D Tex,
+void ShadowRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets)
 {
   auto View = Scene.view<Position, Shadow>();
@@ -93,7 +94,7 @@ void ShadowRendererSystem(entt::registry& Scene, Texture2D Tex,
   }
 }
 
-void BackgroundRendererSystem(entt::registry& Scene, Texture2D Tex,
+void BackgroundRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets)
 {
   auto View = Scene.view<TileTag, Position>();
@@ -183,6 +184,13 @@ void ClientBulletDamageSystem(entt::registry& Scene)
   }
 }
 
+void CursorRenderingSystem(Texture2D& Tex, std::map<string, SpriteAsset>& Assets)
+{
+  DrawTextureRec(Tex, {Assets["Cursor"].x, Assets["Cursor"].y,
+    Assets["Cursor"].Width, Assets["Cursor"].Height},
+    {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
+}
+
 void ShakeSpriteSystem(entt::registry& Scene)
 {
   auto View = Scene.view<Sprite, Shake>();
@@ -231,6 +239,7 @@ int main(void)
   SetWindowIcon(LoadImage("./Resources/WindowIcon.png"));
   SetTargetFPS(60);
   HideCursor();
+  GCon.Log("Gitler :D");
 
   entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
@@ -351,10 +360,7 @@ int main(void)
         SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
         //ColliderDebugRendererSystem(Scene);
         // Render cursor TODO cleanup
-        DrawTextureRec(TextureAtlas, {TextureAssets["Cursor"].x,
-          TextureAssets["Cursor"].y, TextureAssets["Cursor"].Width,
-          TextureAssets["Cursor"].Height},
-          {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
+        
       EndMode2D();
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
