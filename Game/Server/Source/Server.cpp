@@ -12,7 +12,7 @@
 #include "Math.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
-#include "BulletSystem.hpp"
+#include "Systems/BulletSystems.hpp"
 
 using std::string;
 using namespace std::chrono;

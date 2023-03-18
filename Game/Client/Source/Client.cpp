@@ -13,6 +13,7 @@
 #include "Systems/RendererSystems.hpp"
 #include "Systems/ShakeEffectSystems.hpp"
 #include "Systems/SmudgeEffectSystems.hpp"
+#include "Systems/ClientInputSystems.hpp"
 
 using std::string;
 
@@ -28,40 +29,6 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
   Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
-}
-
-void ClientBulletDamageSystem(entt::registry& Scene)
-{
-  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
-  auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Shake, Audio>();
-  for (auto Player : Players)
-  {
-    // Player
-    auto& PTid = Players.get<TeamId>(Player);
-    auto& PPos = Players.get<Position>(Player);
-    auto& PCol = Players.get<Collider>(Player);
-    auto& PAud = Players.get<Audio>(Player);
-    auto& PShk = Players.get<Shake>(Player);
-    
-    for (auto Bullet : Bullets)
-    {
-      // Bullet
-      auto& BTid = Players.get<TeamId>(Bullet);
-      auto& BPos = Players.get<Position>(Bullet);
-      auto& BCol = Players.get<Collider>(Bullet);
-
-      // Check if own or Dead
-      if (PTid.Team == BTid.Team) break;
-
-      // Check for collision
-      if ((PCol.Radius + BCol.Radius) > PointDistance(PPos.x, PPos.y, BPos.x, BPos.y))
-      {
-        PShk.Amount = 2.4f;
-        PAud.bIsPlaying = true;
-        Scene.destroy(Bullet);
-      }
-    }
-  }
 }
 
 int main(void)
@@ -137,6 +104,7 @@ int main(void)
   {
     for(int j = 0; j <= 10; j++)
     {
+      // Craete Prefab Tile
       entt::entity Tile = Scene.create();
       Scene.emplace<TileTag>(Tile);
       Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
@@ -152,26 +120,8 @@ int main(void)
     // Network
     PollNetwork(Scene);
 
-    // Input TODO clean up
-    if (IsConnected())
-    {
-      entt::entity MyPlayerId = GetSelfPlayerEntity();
-      uint8_t MyNetworkId = GetSelfNetworkId();
-      bool bLeft = IsKeyDown(KEY_A) ;
-      bool bRight = IsKeyDown(KEY_D);
-      bool bUp = IsKeyDown(KEY_W);
-      bool bDown = IsKeyDown(KEY_S);
-
-      // Calculate angle
-      if (MyNetworkId != 255)
-      {
-        auto& Pos = Scene.get<Position>(MyPlayerId);
-        float Angle = PointDirection(Pos.x, Pos.y, GetMouseX() / 4, GetMouseY() / 4);
-        
-        if (bLeft || bRight || bUp || bDown) SendMovement(bLeft, bRight, bUp, bDown);
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SendShooting(Angle);
-      }
-    }
+    // Input
+    PlayerNetworkInputSystem(Scene);
 
     // Debug
     if (IsKeyPressed(KEY_M)) SetMasterVolume(0.0f);
@@ -196,9 +146,11 @@ int main(void)
         //ColliderDebugRendererSystem(Scene);
         CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
+      // Debug START
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
         IsConnected() ? GREEN : RED);
+      // Debug END
     EndDrawing();
   }
 

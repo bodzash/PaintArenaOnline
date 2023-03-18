@@ -18,6 +18,7 @@ if(IS_CLIENT)
     Client/Source/Systems/RendererSystems.cpp
     Client/Source/Systems/ShakeEffectSystems.cpp
     Client/Source/Systems/SmudgeEffectSystems.cpp
+    Client/Source/Systems/ClientInputSystems.cpp
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp
