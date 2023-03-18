@@ -5,13 +5,14 @@
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
+#include "Core.hpp"
 #include "Network.hpp"
 #include "Components.hpp"
-#include "Core.hpp"
 #include "Systems/AudioSystems.hpp"
 #include "Systems/BulletSystems.hpp"
 #include "Systems/RendererSystems.hpp"
 #include "Systems/ShakeEffectSystems.hpp"
+#include "Systems/SmudgeEffectSystems.hpp"
 
 using std::string;
 
@@ -27,30 +28,6 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
   Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
-}
-
-void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, SmudgeBall, Sprite, TeamId, Speed>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Smb = View.get<SmudgeBall>(Entity);
-    auto& Spr = View.get<Sprite>(Entity);
-    auto& Spd = View.get<Speed>(Entity);
-    auto& Tid = View.get<TeamId>(Entity);
-
-    Spr.OffsetY = Smb.Height;
-
-    Spd.MaxSpeed *= 0.9f;
-    Smb.Height -= 0.7f;
-
-    if (Smb.Height < -1.0f)
-    {
-      CreatePrefabSmudgeSmall(Scene, Pos.x, Pos.y, Tid.Team);
-      Scene.destroy(Entity);
-    }
-  }
 }
 
 void ClientBulletDamageSystem(entt::registry& Scene)

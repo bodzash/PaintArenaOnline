@@ -17,6 +17,7 @@ if(IS_CLIENT)
     Client/Source/Systems/AudioSystems.cpp
     Client/Source/Systems/RendererSystems.cpp
     Client/Source/Systems/ShakeEffectSystems.cpp
+    Client/Source/Systems/SmudgeEffectSystems.cpp
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp
