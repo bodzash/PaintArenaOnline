@@ -15,6 +15,8 @@ if(IS_CLIENT)
     Client/Source/Client.cpp
     Client/Source/Network.cpp
     Client/Source/Systems/AudioSystems.cpp
+    Client/Source/Systems/RendererSystems.cpp
+    Client/Source/Systems/ShakeEffectSystems.cpp
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp

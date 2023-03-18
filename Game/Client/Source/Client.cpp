@@ -7,30 +7,13 @@
 
 #include "Network.hpp"
 #include "Components.hpp"
+#include "Core.hpp"
 #include "Systems/AudioSystems.hpp"
 #include "Systems/BulletSystems.hpp"
-
-#define PlayerColorPink (Color){133, 45, 102, 255}
-#define PlayerColorGreen (Color){48, 156, 99, 255}
-#define PlayerColorRed (Color){201, 48, 56, 255}
-#define PlayerColorCyan (Color){99, 194, 201, 255}
-#define PlayerColorLime (Color){180, 214, 69, 255}
-#define PlayerColorOrange (Color){255, 173, 59, 255}
+#include "Systems/RendererSystems.hpp"
+#include "Systems/ShakeEffectSystems.hpp"
 
 using std::string;
-
-Color IndexToRGB[6] = {PlayerColorPink, PlayerColorGreen, PlayerColorRed,
-  PlayerColorCyan, PlayerColorLime, PlayerColorOrange};
-
-struct SpriteAsset
-{
-  float x = 0.0f;
-  float y = 0.0f;
-  float Width = 8.0f;
-  float Height = 8.0f;
-  float OffsetX = 0.0f;
-  float OffsetY = 0.0f;
-};
 
 void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t NetId)
 {
@@ -44,68 +27,6 @@ void CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y, uint8_t Ne
   Scene.emplace<Position>(Effect, x, y);
   Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
   Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
-}
-
-void SpriteRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, Sprite>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Spr = View.get<Sprite>(Entity);
-
-    DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
-      Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
-      {Pos.x - Spr.OffsetX, Pos.y - Spr.OffsetY},
-      WHITE);
-  }
-}
-
-void SmudgeRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, Smudge>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Spr = View.get<Smudge>(Entity);
-
-    DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
-      Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
-      {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
-      IndexToRGB[Spr.Color]);
-  }
-}
-
-void ShadowRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, Shadow>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Sha = View.get<Shadow>(Entity);
-
-    DrawTextureRec(Tex, {Assets[Sha.Asset].x, Assets[Sha.Asset].y,
-      Assets[Sha.Asset].Width, Assets[Sha.Asset].Height},
-      {Pos.x - Assets[Sha.Asset].OffsetX, Pos.y - Assets[Sha.Asset].OffsetY},
-      {0, 0, 0, 100});
-  }
-}
-
-void BackgroundRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<TileTag, Position>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    DrawTextureRec(Tex, {Assets["FloorTile"].x, Assets["FloorTile"].y,
-      Assets["FloorTile"].Width, Assets["FloorTile"].Height},
-      {Pos.x, Pos.y}, WHITE);
-  }
 }
 
 void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Assets)
@@ -163,48 +84,6 @@ void ClientBulletDamageSystem(entt::registry& Scene)
         Scene.destroy(Bullet);
       }
     }
-  }
-}
-
-void CursorRenderingSystem(Texture2D& Tex, std::map<string, SpriteAsset>& Assets)
-{
-  DrawTextureRec(Tex, {Assets["Cursor"].x, Assets["Cursor"].y,
-    Assets["Cursor"].Width, Assets["Cursor"].Height},
-    {(float)GetMouseX() / 4 - 5, (float)GetMouseY() / 4 - 5}, WHITE);
-}
-
-void ShakeSpriteSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Sprite, Shake>();
-  for (auto Entity : View)
-  {
-    auto& Spr = View.get<Sprite>(Entity);
-    auto& Shk = View.get<Shake>(Entity);
-
-    if (Shk.Amount <= 0.0f)
-    {
-      Shk.Amount = 0.0f;
-      Spr.OffsetX = Spr.OgOffsetX;
-      Spr.OffsetY = Spr.OgOffsetY;
-    }
-    else
-    {
-      Spr.OffsetX = RandomRange(-Shk.Amount, Shk.Amount) + Spr.OgOffsetX;
-      Spr.OffsetY = RandomRange(-Shk.Amount, Shk.Amount) + Spr.OgOffsetY;
-      Shk.Amount -= 0.4f;
-    }
-  }
-}
-
-void ColliderDebugRendererSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, Collider>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Col = View.get<Collider>(Entity);
-
-    DrawCircleV({Pos.x, Pos.y}, Col.Diameter / 2.0f, {85, 170, 250, 191});
   }
 }
 
@@ -318,8 +197,6 @@ int main(void)
     }
 
     // Debug
-    //if (IsKeyPressed(KEY_KP_ADD)) MainCamera.zoom += 1.0f;
-    //if (IsKeyPressed(KEY_KP_SUBTRACT)) MainCamera.zoom -= 1.0f;
     if (IsKeyPressed(KEY_M)) SetMasterVolume(0.0f);
     if (IsKeyPressed(KEY_N)) SetMasterVolume(1.0f);
 
