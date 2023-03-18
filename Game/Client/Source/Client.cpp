@@ -5,7 +5,6 @@
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
 
-#include "Console.hpp"
 #include "Network.hpp"
 #include "Components.hpp"
 #include "BulletSystem.hpp"
@@ -239,7 +238,6 @@ int main(void)
   SetWindowIcon(LoadImage("./Resources/WindowIcon.png"));
   SetTargetFPS(60);
   HideCursor();
-  GCon.Log("Gitler :D");
 
   entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
@@ -364,7 +362,7 @@ int main(void)
       EndMode2D();
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
-      IsConnected() ? GREEN : RED);
+        IsConnected() ? GREEN : RED);
     EndDrawing();
   }
 
