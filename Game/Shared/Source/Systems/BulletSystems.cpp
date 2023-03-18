@@ -1,12 +1,7 @@
-#pragma once
+#include "Systems/BulletSystems.hpp"
 
-#include "entt/entity/registry.hpp"
-
-#include "Components.hpp"
-#include "Math.hpp"
-
-// TODO rename directionalmovementsystem
-void BulletMovementSystem(entt::registry& Scene, float Delta)
+// TODO move this function to some physicsdynamicssystems.hpp/cpp
+void DirectionalMovementSystem(entt::registry& Scene, float Delta)
 {
   auto View = Scene.view<Position, Direction, Speed>();
   for (auto Entity : View)

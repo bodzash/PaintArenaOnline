@@ -11,15 +11,20 @@ if(IS_CLIENT)
   project(Client)
   
   add_executable(${PROJECT_NAME}
+    # Client
     Client/Source/Client.cpp
     Client/Source/Network.cpp
+    Client/Source/Systems/AudioSystems.cpp
+    # Shared
+    Shared/Source/Math.cpp
+    Shared/Source/Systems/BulletSystems.cpp
   )
 
   add_subdirectory(External/raylib)
   add_subdirectory(External/enet)
 
   target_include_directories(${PROJECT_NAME}
-    PUBLIC Shared
+    PUBLIC Shared/Include
     PUBLIC Client/Include
     PUBLIC External/raylib/src
     PUBLIC External/entt/src
@@ -37,13 +42,17 @@ else()
   project(Server)
 
   add_executable(${PROJECT_NAME}
+    # Server
     Server/Source/Server.cpp
+    # Shared
+    Shared/Source/Math.cpp
+    Shared/Source/Systems/BulletSystems.cpp
   )
 
   add_subdirectory(External/enet)
 
   target_include_directories(${PROJECT_NAME}
-    PUBLIC Shared
+    PUBLIC Shared/Include
     PUBLIC Server/Include
     PUBLIC External/entt/src
     PUBLIC External/enet/include

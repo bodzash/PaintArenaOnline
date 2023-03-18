@@ -7,7 +7,8 @@
 
 #include "Network.hpp"
 #include "Components.hpp"
-#include "BulletSystem.hpp"
+#include "Systems/AudioSystems.hpp"
+#include "Systems/BulletSystems.hpp"
 
 #define PlayerColorPink (Color){133, 45, 102, 255}
 #define PlayerColorGreen (Color){48, 156, 99, 255}
@@ -127,24 +128,6 @@ void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Asse
     {
       CreatePrefabSmudgeSmall(Scene, Pos.x, Pos.y, Tid.Team);
       Scene.destroy(Entity);
-    }
-  }
-}
-
-void AudioPlayerSystem(entt::registry& Scene, std::map<string, Sound> Assets)
-{
-  auto View = Scene.view<Audio>();
-  for (auto Entity : View)
-  {
-    auto& Aud = View.get<Audio>(Entity);
-
-    if (Aud.bIsPlaying)
-    {
-      int Rnd = RandomInt(2);
-
-      PlaySound(Assets[(Rnd == 1) ? Aud.Asset1 : Aud.Asset2]);
-      Aud.bIsPlaying = false;
-      if (Aud.bOneTime) Scene.remove<Audio>(Entity);
     }
   }
 }
@@ -342,7 +325,7 @@ int main(void)
 
     // Update
     AudioPlayerSystem(Scene, AudioAssets);
-    BulletMovementSystem(Scene, GetFrameTime());
+    DirectionalMovementSystem(Scene, GetFrameTime());
     ClientBulletDamageSystem(Scene);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
@@ -357,8 +340,7 @@ int main(void)
         ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
         SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
         //ColliderDebugRendererSystem(Scene);
-        // Render cursor TODO cleanup
-        
+        CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
