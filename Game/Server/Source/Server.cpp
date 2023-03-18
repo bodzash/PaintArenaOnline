@@ -12,6 +12,8 @@
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
 #include "Systems/BulletSystems.hpp"
+#include "Systems/MovementSystems.hpp"
+#include "Systems/BoundsSystems.hpp"
 
 using std::string;
 using namespace std::chrono;
@@ -28,55 +30,6 @@ void ServerBroadcastMessage(T& Msg, ENetHost* Server)
 {
   ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
   enet_host_broadcast(Server, 0, Packet);
-}
-
-void DynamicMovementSystem(float DeltaTime, entt::registry& Scene)
-{
-  auto View = Scene.view<Position, Velocity, Speed>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Vel = View.get<Velocity>(Entity);
-    auto& Spd = View.get<Speed>(Entity);
-
-    float VelocityDirX = Vel.x;
-    float VelocityDirY = Vel.y;
-
-    NormalizeVector(VelocityDirX, VelocityDirY);
-
-    Pos.x += VelocityDirX * abs(Vel.x) * DeltaTime;
-    Pos.y += VelocityDirY * abs(Vel.y) * DeltaTime;
-
-    Vel.x = Approach(Vel.x, 0.0f, Spd.Deceleration);
-    Vel.y = Approach(Vel.y, 0.0f, Spd.Deceleration);
-  }
-}
-
-void KeepPlayerInBoundsSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, PlayerTag>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    if (Pos.x < 4.0f)
-    {
-      Pos.x = 4.0f;
-    }
-    else if (Pos.x > 236.0f)
-    {
-      Pos.x = 236.0f;
-    }
-
-    if (Pos.y < 4.0f)
-    {
-      Pos.y = 4.0f;
-    }
-    else if (Pos.y > 172.0f)
-    {
-      Pos.y = 172.0f;
-    }  
-  }
 }
 
 void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)

@@ -1,52 +1,5 @@
 #include "Systems/BulletSystems.hpp"
 
-// TODO move this function to some physicsdynamicssystems.hpp/cpp
-void DirectionalMovementSystem(entt::registry& Scene, float Delta)
-{
-  auto View = Scene.view<Position, Direction, Speed>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Dir = View.get<Direction>(Entity);
-    auto& Spd = View.get<Speed>(Entity);
-
-    // Move angle
-    Pos.x += (Spd.MaxSpeed * (float)cos(Dir.Angle)) * Delta;
-    Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)) * Delta;
-  }
-}
-
-void RemoveBulletOutOfBoundsSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, BulletTag>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    if (Pos.x < 0.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-    else if (Pos.x > 240.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-
-    if (Pos.y < 0.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    }
-    else if (Pos.y > 176.0f)
-    {
-      Scene.destroy(Entity);
-      break;
-    } 
-  }
-}
-
 void ClientBulletDamageSystem(entt::registry& Scene)
 {
   auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();

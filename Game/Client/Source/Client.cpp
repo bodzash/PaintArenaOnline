@@ -14,6 +14,8 @@
 #include "Systems/ShakeEffectSystems.hpp"
 #include "Systems/SmudgeEffectSystems.hpp"
 #include "Systems/ClientInputSystems.hpp"
+#include "Systems/MovementSystems.hpp"
+#include "Systems/BoundsSystems.hpp"
 
 using std::string;
 

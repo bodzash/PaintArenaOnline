@@ -14,6 +14,7 @@ if(IS_CLIENT)
     # Client
     Client/Source/Client.cpp
     Client/Source/Network.cpp
+    #Core
     Client/Source/Systems/AudioSystems.cpp
     Client/Source/Systems/RendererSystems.cpp
     Client/Source/Systems/ShakeEffectSystems.cpp
@@ -22,6 +23,8 @@ if(IS_CLIENT)
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp
+    Shared/Source/Systems/MovementSystems.cpp
+    Shared/Source/Systems/BoundsSystems.cpp
   )
 
   add_subdirectory(External/raylib)
@@ -48,9 +51,12 @@ else()
   add_executable(${PROJECT_NAME}
     # Server
     Server/Source/Server.cpp
+    #Timing
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp
+    Shared/Source/Systems/MovementSystems.cpp
+    Shared/Source/Systems/BoundsSystems.cpp
   )
 
   add_subdirectory(External/enet)
