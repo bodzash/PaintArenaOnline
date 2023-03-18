@@ -4,7 +4,6 @@
 #include <array>
 #include <thread>
 #include <cstdlib>
-#include <ctime>
 
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
@@ -189,7 +188,7 @@ entt::entity CreatePrefabBullet(entt::registry& Scene, float x, float y, float A
 int main()
 {
   // Set random seed value for random number generator
-  srand((unsigned)time(NULL));
+  SetRandomSeed();
 
   // ECS world
   entt::registry Scene;
@@ -200,7 +199,7 @@ int main()
   system_clock::time_point TimeStart = system_clock::now();
   system_clock::time_point TimeEnd = system_clock::now();  
 
-  // Scene and Network info
+  // Network info
   const int MaxNetworkClients = 6;
   int NetworkClientNumber = 0;
   std::array<RemotePeer, MaxNetworkClients> NetworkClients;
@@ -364,7 +363,7 @@ int main()
     InputToMovementSystem(Scene);
     DynamicMovementSystem(DeltaTime, Scene);
     KeepPlayerInBoundsSystem(Scene);
-    BulletMovementSystem(Scene, DeltaTime);
+    DirectionalMovementSystem(Scene, DeltaTime);
     ServerBulletDamageSystem(Scene);
     HealthDeathSystem(Scene, pServer);
     RemoveBulletOutOfBoundsSystem(Scene);

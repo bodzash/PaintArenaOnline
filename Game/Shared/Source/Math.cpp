@@ -26,6 +26,11 @@ float Lerp(float First, float Second, float Amount)
 }
 
 // Random
+void SetRandomSeed()
+{
+  srand((unsigned)time(NULL));
+}
+
 int RandomRange(int Min, int Max)
 {
   return (rand() % (Max - Min)) + Min;

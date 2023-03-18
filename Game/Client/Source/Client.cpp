@@ -45,6 +45,8 @@ int main(void)
   SetTargetFPS(60);
   HideCursor();
 
+  SetRandomSeed();
+
   entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
