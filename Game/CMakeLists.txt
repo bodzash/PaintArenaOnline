@@ -51,12 +51,12 @@ else()
   add_executable(${PROJECT_NAME}
     # Server
     Server/Source/Server.cpp
+    Server/Source/Timing.cpp
     Server/Source/SvNetworking.cpp
     Server/Source/SvPrefabs.cpp
     Server/Source/Systems/SvInputSystems.cpp
     Server/Source/Systems/SvNetworkSystems.cpp
     Server/Source/Systems/HealthSystems.cpp
-    #Timing
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp

@@ -1,14 +1,12 @@
 #include <iostream>
-#include <chrono>
 #include <cstdint>
 #include <array>
-#include <thread>
-#include <cstdlib>
 
 #include "enet/enet.h"
 #include "entt/entity/registry.hpp"
 
 #include "Math.hpp"
+#include "Timing.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
 #include "SvNetworking.hpp"
@@ -19,24 +17,13 @@
 #include "Systems/SvInputSystems.hpp"
 #include "Systems/SvNetworkSystems.hpp"
 
-using namespace std::chrono;
-
 // Program entry point
 int main()
-{
-  // Set random seed value for random number generator
+{  
+  // Setup
   SetRandomSeed();
-
-  // ECS world
   entt::registry Scene;
-
-  // Timing
-  const float FrameRate = 1000 / 60;
   float DeltaTime = 0.016f;
-  system_clock::time_point TimeStart = system_clock::now();
-  system_clock::time_point TimeEnd = system_clock::now();  
-
-  // Network info
   std::array<RemotePeer, 6> NetworkClients;
   
   // ENet
@@ -46,7 +33,7 @@ int main()
   Address.host = ENET_HOST_ANY;
   Address.port = 7777;
 
-  // Todo clean this mess
+  // Init TODO clean this mess
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
   pServer = enet_host_create(&Address, 32, 1, 0, 0);
   if (pServer == NULL) std::cout << "Error when trying to create pServer host" << "\n";
@@ -57,20 +44,7 @@ int main()
   while (true)
   {
     // Delta timing and thread sleeping
-    TimeStart = system_clock::now();
-    duration<float, std::milli> WorkTime = TimeStart - TimeEnd;
-
-    if (WorkTime.count() < FrameRate)
-    {
-      duration<float, std::milli> DeltaMs(FrameRate - WorkTime.count());
-      milliseconds DeltaMsDuration = duration_cast<milliseconds>(DeltaMs);
-      std::this_thread::sleep_for(milliseconds(DeltaMsDuration.count()));
-    }
-
-    TimeEnd = system_clock::now();
-    duration<float, std::milli> sleep_time = TimeEnd - TimeStart;
-    
-    DeltaTime = (1.0f / (1000.0f / (WorkTime + sleep_time).count()));
+    DeltaTime = CalculateDeltaTime();
 
     // Network polling
     while(enet_host_service(pServer, &Event, 0) > 0)
