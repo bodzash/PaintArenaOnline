@@ -41,6 +41,7 @@ int main(void)
   std::map<string, SpriteAsset> TextureAssets;
   std::map<string, Sound> AudioAssets;
   Camera2D MainCamera;
+  bool bMuted = false;
   MainCamera.target = {0.0f, 0.0f};
   MainCamera.offset = {0.0f, 0.0f};
   MainCamera.rotation = 0.0f;
@@ -106,8 +107,12 @@ int main(void)
     PlayerNetworkInputSystem(Scene);
 
     // Debug
-    if (IsKeyPressed(KEY_M)) SetMasterVolume(0.0f);
-    if (IsKeyPressed(KEY_N)) SetMasterVolume(1.0f);
+    if (IsKeyPressed(KEY_M))
+    {
+      if (bMuted)SetMasterVolume(1.0f);
+      else SetMasterVolume(0.0f);
+      bMuted = !bMuted;
+    }
 
     // Update
     AudioPlayerSystem(Scene, AudioAssets);
