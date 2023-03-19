@@ -6,9 +6,9 @@
 #include "entt/entity/registry.hpp"
 
 #include "Core.hpp"
-#include "Networking.hpp"
-#include "Components.hpp"
+#include "ClNetworking.hpp"
 #include "ClPrefabs.hpp"
+#include "Components.hpp"
 #include "Systems/AudioSystems.hpp"
 #include "Systems/BulletSystems.hpp"
 #include "Systems/RendererSystems.hpp"

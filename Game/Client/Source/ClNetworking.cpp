@@ -3,10 +3,11 @@
 
 #include "enet/enet.h"
 
-#include "Networking.hpp"
+#include "ClNetworking.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
 #include "ClientTypes.hpp"
+#include "ClPrefabs.hpp"
 
 using std::string;
 
@@ -15,8 +16,7 @@ ENetEvent Event;
 ENetPeer* Peer;
 ENetHost* Client;
 
-const int MaxNetworkClients = 6;
-std::array<RemotePeer, MaxNetworkClients> NetworkClients;
+std::array<RemotePeer, 6> NetworkClients;
 
 bool bConnected = false;
 uint8_t SelfNetworkId = 255;
@@ -26,6 +26,7 @@ bool IsConnected()
   return bConnected;
 }
 
+// TODO CLEANUP
 void ConnectToServer()
 {
   if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
@@ -40,6 +41,7 @@ void ConnectToServer()
   if (Peer == NULL) std::cout << "No available peer to initiate connection" << "\n";
 }
 
+// TODO CLEANUP
 void PollNetwork(entt::registry& Scene)
 {
   while(enet_host_service(Client, &Event, 0) > 0)
@@ -48,7 +50,7 @@ void PollNetwork(entt::registry& Scene)
     {
     case ENET_EVENT_TYPE_CONNECT:
     {
-      std::cout << "Connection event recieved chief" << "\n";
+      std::cout << "Connection event recieved" << "\n";
     }
     break;
 
@@ -69,17 +71,8 @@ void PollNetwork(entt::registry& Scene)
         CreatePlayer* Msg = (CreatePlayer*)Event.packet->data;
 
         // Create player
-        entt::entity Player = Scene.create();
-        Scene.emplace<PlayerTag>(Player);
-        Scene.emplace<TeamId>(Player, Msg->Nid);
-        Scene.emplace<NetworkId>(Player, Msg->Nid);
-        Scene.emplace<Position>(Player, Msg->x, Msg->y);
-        Scene.emplace<Collider>(Player, 8.0f);
-        Scene.emplace<Audio>(Player, "Hit1", "Hit2", false, false);
-        Scene.emplace<Sprite>(Player, NetworkIdToPlayerAsset[(int)Msg->Nid],
-          4.0f, 4.0f, 4.0f, 4.0f);
-        Scene.emplace<Shadow>(Player, "PlayerShadow");
-        Scene.emplace<Shake>(Player);
+        entt::entity Player = CreatePrefabPlayer(Scene, Msg->Nid, Msg->x, Msg->y,
+          NetworkIdToPlayerAsset[(int)Msg->Nid]);
 
         // Handle slot
         NetworkClients[Msg->Nid].Id = Player;
@@ -120,17 +113,10 @@ void PollNetwork(entt::registry& Scene)
         auto& Shk = Scene.get<Shake>(NetworkClients[(int)Msg->Nid].Id);
         Shk.Amount = 0.6f;
 
-        entt::entity Bullet = Scene.create();
-        Scene.emplace<BulletTag>(Bullet);
-        Scene.emplace<TeamId>(Bullet, Msg->Nid);
-        Scene.emplace<Position>(Bullet, Msg->x, Msg->y);
-        Scene.emplace<Direction>(Bullet, Msg->Direction);
-        Scene.emplace<Speed>(Bullet, 140.0f);
-        Scene.emplace<Collider>(Bullet, 4.0f);
-        Scene.emplace<Audio>(Bullet, "Shoot1", "Shoot2", true, true);
-        Scene.emplace<Sprite>(Bullet, NetworkIdToBulletAsset[(int)Msg->Nid], 2.0f, 2.0f);
-        Scene.emplace<Shadow>(Bullet, "BulletShadow");
-      } else if (PacketHeader == 5)
+        CreatePrefabBullet(Scene, Msg->Nid, Msg->x, Msg->y, Msg->Direction,
+          NetworkIdToBulletAsset[(int)Msg->Nid]);
+      }
+      else if (PacketHeader == 5)
       {
         DeathPlayer* Msg = (DeathPlayer*)Event.packet->data;
 
@@ -138,26 +124,13 @@ void PollNetwork(entt::registry& Scene)
         Shk.Amount = 0.0f;
 
         // Create Big smudge
-        int Index = rand() % 3;
-        string Asset = "BigSmudge1";
-        if (Index == 1) Asset = "BigSmudge2";
-        else if (Index == 2) Asset = "BigSmudge3";
-
-        entt::entity Effect = Scene.create();
-        Scene.emplace<Position>(Effect, Msg->x, Msg->y);
-        Scene.emplace<Smudge>(Effect, Asset, (int)Msg->Nid);
+        CreatePrefabBigSmudge(Scene, Msg->Nid, Msg->x, Msg->y);
 
         // Create smudge balls
         for (int i = 0; i < 5; i++)
         {
-          entt::entity Ball = Scene.create();
-          Scene.emplace<Position>(Ball, Msg->x, Msg->y);
-          Scene.emplace<Direction>(Ball, (float)(rand() % 628) / 100.0f);
-          Scene.emplace<Speed>(Ball, (float)((rand() % 130 - 80) + 80));
-          Scene.emplace<TeamId>(Ball, Msg->Nid);
-          Scene.emplace<Sprite>(Ball, NetworkIdToBulletAsset[(int)Msg->Nid], 2.0f, 2.0f);
-          Scene.emplace<Shadow>(Ball, "BulletShadow");
-          Scene.emplace<SmudgeBall>(Ball, 5.0f + (float)(rand() % 10));
+          CreatePrefabSmallSmudge(Scene, Msg->Nid, NetworkIdToBulletAsset[(int)Msg->Nid],
+            Msg->x, Msg->y);
         }
       }
 
