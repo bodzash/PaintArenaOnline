@@ -7,6 +7,7 @@
 
 #include "Core.hpp"
 #include "Components.hpp"
+#include "ClPrefabs.hpp"
 
 using std::string;
 

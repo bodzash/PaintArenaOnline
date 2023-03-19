@@ -18,7 +18,7 @@ void SmudgeBallSystem(entt::registry& Scene, std::map<string, SpriteAsset>& Asse
 
     if (Smb.Height < -1.0f)
     {
-      //CreatePrefabSmudgeSmall(Scene, Pos.x, Pos.y, Tid.Team);
+      CreatePrefabSmudgeSmall(Scene, Pos.x, Pos.y, Tid.Team);
       Scene.destroy(Entity);
     }
   }

@@ -15,6 +15,7 @@ if(IS_CLIENT)
     Client/Source/Client.cpp
     Client/Source/Networking.cpp
     #Core
+    Client/Source/ClPrefabs.cpp
     Client/Source/Systems/AudioSystems.cpp
     Client/Source/Systems/RendererSystems.cpp
     Client/Source/Systems/ShakeEffectSystems.cpp

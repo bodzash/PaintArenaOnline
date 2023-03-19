@@ -35,8 +35,8 @@ void DeinitServerHost(ENetHost* pServer)
 void HandleClientConnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pServer,
   std::array<RemotePeer, 6>& NetworkClients)
 {
-  std::cout << "[Info] Client connected" << "\n";
-  std::cout << "[Info] Peer: " << (int)Event.peer << "\n";
+  std::cout << "[Info] Client connected: " << (int)Event.peer << "\n";
+  //std::cout << "[Info] Peer: " << (int)Event.peer << "\n";
 
   bool bFoundSlot = false;
 
