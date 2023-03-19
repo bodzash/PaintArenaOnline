@@ -5,4 +5,4 @@
 
 using namespace std::chrono;
 
-float CalculateDeltaTime();
+float CalculateDeltaTimeAndSleepThread();

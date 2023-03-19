@@ -44,7 +44,7 @@ int main()
   while (true)
   {
     // Delta timing and thread sleeping
-    DeltaTime = CalculateDeltaTime();
+    DeltaTime = CalculateDeltaTimeAndSleepThread();
 
     // Network polling
     while(enet_host_service(pServer, &Event, 0) > 0)

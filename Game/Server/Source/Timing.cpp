@@ -5,7 +5,7 @@ const float FrameRate = 1000 / 60;
 system_clock::time_point TimeStart = system_clock::now();
 system_clock::time_point TimeEnd = system_clock::now();
 
-float CalculateDeltaTime()
+float CalculateDeltaTimeAndSleepThread()
 {
   TimeStart = system_clock::now();
   duration<float, std::milli> WorkTime = TimeStart - TimeEnd;
