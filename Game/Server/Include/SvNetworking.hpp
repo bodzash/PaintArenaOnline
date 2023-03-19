@@ -25,6 +25,9 @@ void ServerBroadcastMessage(T& Msg, ENetHost* Server)
   enet_host_broadcast(Server, 0, Packet);
 }
 
+bool InitServerHost(ENetHost*& pServer, ENetAddress Address);
+void DeinitServerHost(ENetHost* pServer);
+
 void HandleClientConnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pServer,
   std::array<RemotePeer, 6>& NetworkClients);
 void HandleClientDisconnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pServer);

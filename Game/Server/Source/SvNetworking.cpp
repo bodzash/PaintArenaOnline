@@ -1,10 +1,42 @@
 #include "SvNetworking.hpp"
 
+bool InitServerHost(ENetHost*& pServer, ENetAddress Address)
+{
+  // Try to init ENet
+  if (enet_initialize() != 0)
+  {
+    std::cout << "[Fatal] Networking library failed to initialize" << "\n";
+    return false;
+  }
+  else
+  {
+    // Try to create host
+    pServer = enet_host_create(&Address, 6, 1, 0, 0);
+    if (pServer == NULL)
+    {
+      std::cout << "[Fatal] Networking library failed to create host" << "\n";
+      return false;
+    }
+    else
+    {
+      std::cout << "[Info] Game Server Started" << "\n";
+      return true;
+    }
+  }
+}
+
+void DeinitServerHost(ENetHost* pServer)
+{
+  enet_host_destroy(pServer);
+  enet_deinitialize();
+  std::cout << "[Info] Game Server Closed" << "\n";
+}
+
 void HandleClientConnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pServer,
   std::array<RemotePeer, 6>& NetworkClients)
 {
-  std::cout << "Client connected: " << Event.peer->address.host << "\n";
-  std::cout << "Peer: " << Event.peer << "\n";
+  std::cout << "[Info] Client connected" << "\n";
+  std::cout << "[Info] Peer: " << (int)Event.peer << "\n";
 
   bool bFoundSlot = false;
 
@@ -63,7 +95,7 @@ void HandleClientConnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pSer
 
 void HandleClientDisconnect(ENetEvent& Event, entt::registry& Scene, ENetHost* pServer)
 {
-  std::cout << "Client disconnected: " << Event.peer << "\n";
+  std::cout << "[Info] Client disconnected: " << (int)Event.peer << "\n";
 
   // If peer is non player just break
   if (Event.peer->data == nullptr) return;
