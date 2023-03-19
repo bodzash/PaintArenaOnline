@@ -13,7 +13,8 @@ if(IS_CLIENT)
   add_executable(${PROJECT_NAME}
     # Client
     Client/Source/Client.cpp
-    #Client/Source/Core.cpp
+    Client/Source/Core.cpp
+    Client/Source/Assets.cpp
     Client/Source/ClNetworking.cpp
     Client/Source/ClPrefabs.cpp
     Client/Source/Systems/AudioSystems.cpp
