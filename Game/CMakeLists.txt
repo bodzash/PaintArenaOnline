@@ -13,13 +13,13 @@ if(IS_CLIENT)
   add_executable(${PROJECT_NAME}
     # Client
     Client/Source/Client.cpp
-    Client/Source/Network.cpp
+    Client/Source/Networking.cpp
     #Core
     Client/Source/Systems/AudioSystems.cpp
     Client/Source/Systems/RendererSystems.cpp
     Client/Source/Systems/ShakeEffectSystems.cpp
     Client/Source/Systems/SmudgeEffectSystems.cpp
-    Client/Source/Systems/ClientInputSystems.cpp
+    Client/Source/Systems/ClInputSystems.cpp
     # Shared
     Shared/Source/Math.cpp
     Shared/Source/Systems/BulletSystems.cpp
@@ -51,7 +51,9 @@ else()
   add_executable(${PROJECT_NAME}
     # Server
     Server/Source/Server.cpp
-    Server/Source/Systems/ServerInputSystems.cpp
+    Server/Source/Systems/SvInputSystems.cpp
+    Server/Source/Systems/SvNetworkSystems.cpp
+    Server/Source/Systems/HealthSystems.cpp
     #Timing
     # Shared
     Shared/Source/Math.cpp

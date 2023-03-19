@@ -6,14 +6,14 @@
 #include "entt/entity/registry.hpp"
 
 #include "Core.hpp"
-#include "Network.hpp"
+#include "Networking.hpp"
 #include "Components.hpp"
 #include "Systems/AudioSystems.hpp"
 #include "Systems/BulletSystems.hpp"
 #include "Systems/RendererSystems.hpp"
 #include "Systems/ShakeEffectSystems.hpp"
 #include "Systems/SmudgeEffectSystems.hpp"
-#include "Systems/ClientInputSystems.hpp"
+#include "Systems/ClInputSystems.hpp"
 #include "Systems/MovementSystems.hpp"
 #include "Systems/BoundsSystems.hpp"
 

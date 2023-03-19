@@ -4,7 +4,7 @@
 #include "entt/entity/registry.hpp"
 
 #include "Components.hpp"
-#include "Network.hpp"
+#include "Networking.hpp"
 #include "Math.hpp"
 
 void PlayerNetworkInputSystem(entt::registry& Scene);

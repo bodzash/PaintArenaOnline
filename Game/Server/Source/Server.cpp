@@ -14,59 +14,12 @@
 #include "Systems/BulletSystems.hpp"
 #include "Systems/MovementSystems.hpp"
 #include "Systems/BoundsSystems.hpp"
-#include "Systems/ServerInputSystems.hpp"
+#include "Systems/HealthSystems.hpp"
+#include "Systems/SvInputSystems.hpp"
+#include "Systems/SvNetworkSystems.hpp"
 
 using std::string;
 using namespace std::chrono;
-
-template<typename T>
-void ServerSendMessage(T& Msg, ENetPeer* Peer)
-{
-  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-  enet_peer_send(Peer, 0, Packet);
-}
-
-template<typename T>
-void ServerBroadcastMessage(T& Msg, ENetHost* Server)
-{
-  ENetPacket* Packet = enet_packet_create(&Msg, sizeof(Msg), 1);
-  enet_host_broadcast(Server, 0, Packet);
-}
-
-void NetworkPlayerUpdateSystem(entt::registry& Scene, ENetHost* Server)
-{
-  auto View = Scene.view<Position, NetworkId>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Nid = View.get<NetworkId>(Entity);
-
-    // Send out info
-    UpdatePlayer Msg = {3, (uint8_t)Nid.Id, Pos.x, Pos.y};
-    ServerBroadcastMessage<UpdatePlayer>(Msg, Server);
-  }
-}
-
-void HealthDeathSystem(entt::registry& Scene, ENetHost* Server)
-{
-  auto View = Scene.view<Health, Position, NetworkId>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Hel = View.get<Health>(Entity);
-    auto& Nid = View.get<NetworkId>(Entity);
-
-    if (Hel.Current <= Hel.Min)
-    {
-      DeathPlayer Msg = {5, Nid.Id, Pos.x, Pos.y};
-      ServerBroadcastMessage<DeathPlayer>(Msg, Server);
-
-      Hel.Current = Hel.Max;
-      Pos.x = (float)RandomRange(4, 236);
-      Pos.y = (float)RandomRange(4, 172);
-    }
-  }
-}
 
 entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t NetId)
 {

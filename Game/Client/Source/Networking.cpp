@@ -3,7 +3,7 @@
 
 #include "enet/enet.h"
 
-#include "Network.hpp"
+#include "Networking.hpp"
 #include "Components.hpp"
 #include "NetworkTypes.hpp"
 #include "ClientTypes.hpp"
