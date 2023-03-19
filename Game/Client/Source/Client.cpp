@@ -23,20 +23,20 @@ using std::string;
 
 int main(void)
 {
-  // Init
   const int ScreenWidth = 224;
   const int ScreenHeight = 160;
   const int WindowWidth = 960;
   const int WindowHeight = 704;
 
+  // Init
   InitWindow(WindowWidth, WindowHeight, "Paint Arena Online");
   InitAudioDevice();
   SetWindowIcon(LoadImage("./Resources/WindowIcon.png"));
   SetTargetFPS(60);
   HideCursor();
-
   SetRandomSeed();
 
+  // Setup
   entt::registry Scene;
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
