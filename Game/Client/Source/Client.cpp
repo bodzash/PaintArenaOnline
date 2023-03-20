@@ -76,13 +76,13 @@ int main(void)
     }
 
     // Update
-    ShadowFollowOwnerSystem(Scene);
     AudioPlayerSystem(Scene, AudioAssets);
     DirectionalMovementSystem(Scene, GetFrameTime());
     ClientBulletDamageSystem(Scene);
     RemoveBulletOutOfBoundsSystem(Scene);
     SmudgeBallSystem(Scene, TextureAssets);
     ShakeSpriteSystem(Scene);
+    ShadowFollowOwnerSystem(Scene);
 
     // Render
     BeginDrawing();

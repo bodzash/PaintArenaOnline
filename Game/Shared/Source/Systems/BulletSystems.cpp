@@ -2,7 +2,7 @@
 
 void ClientBulletDamageSystem(entt::registry& Scene)
 {
-  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider>();
+  auto Bullets = Scene.view<BulletTag, TeamId, Position, Collider, Shadow>();
   auto Players = Scene.view<PlayerTag, TeamId, Position, Collider, Shake, Audio>();
   for (auto Player : Players)
   {
@@ -16,9 +16,10 @@ void ClientBulletDamageSystem(entt::registry& Scene)
     for (auto Bullet : Bullets)
     {
       // Bullet
-      auto& BTid = Players.get<TeamId>(Bullet);
-      auto& BPos = Players.get<Position>(Bullet);
-      auto& BCol = Players.get<Collider>(Bullet);
+      auto& BTid = Bullets.get<TeamId>(Bullet);
+      auto& BPos = Bullets.get<Position>(Bullet);
+      auto& BCol = Bullets.get<Collider>(Bullet);
+      auto& BShd = Bullets.get<Shadow>(Bullet);
 
       // Check if own or Dead
       if (PTid.Team == BTid.Team) break;
@@ -28,6 +29,7 @@ void ClientBulletDamageSystem(entt::registry& Scene)
       {
         PShk.Amount = 2.4f;
         PAud.bIsPlaying = true;
+        Scene.destroy((entt::entity)BShd.Reference);
         Scene.destroy(Bullet);
       }
     }
@@ -49,9 +51,9 @@ void ServerBulletDamageSystem(entt::registry& Scene)
     for (auto Bullet : Bullets)
     {
       // Bullet
-      auto& BTid = Players.get<TeamId>(Bullet);
-      auto& BPos = Players.get<Position>(Bullet);
-      auto& BCol = Players.get<Collider>(Bullet);
+      auto& BTid = Bullets.get<TeamId>(Bullet);
+      auto& BPos = Bullets.get<Position>(Bullet);
+      auto& BCol = Bullets.get<Collider>(Bullet);
 
       // Check if own or Dead
       if (PTid.Team == BTid.Team || PHel.Current <= PHel.Min) break;
