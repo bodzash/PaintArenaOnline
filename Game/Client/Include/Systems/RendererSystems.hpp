@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <map>
 
@@ -20,11 +21,4 @@ using std::string;
 
 void SpriteRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets);
-void SmudgeRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets);
-void ShadowRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets);
-void BackgroundRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets);
-void ColliderDebugRendererSystem(entt::registry& Scene);
 void CursorRenderingSystem(Texture2D& Tex, std::map<string, SpriteAsset>& Assets);

@@ -86,8 +86,11 @@ void PollNetwork(entt::registry& Scene)
         // If no such player just gtfo
         if (!NetworkClients[Msg->Nid].bActive) break;
 
-        // Remove entity
-        Scene.destroy(NetworkClients[Msg->Nid].Id);
+        entt::entity Player = NetworkClients[Msg->Nid].Id;
+
+        // Remove shadow and entity
+        Scene.destroy((entt::entity)Scene.get<Shadow>(Player).Reference);
+        Scene.destroy(Player);
 
         // Handle slot
         NetworkClients[Msg->Nid].bActive = false;
@@ -129,7 +132,7 @@ void PollNetwork(entt::registry& Scene)
         // Create smudge balls
         for (int i = 0; i < 5; i++)
         {
-          CreatePrefabSmallSmudge(Scene, Msg->Nid, NetworkIdToBulletAsset[(int)Msg->Nid],
+          CreatePrefabSmudgeBall(Scene, Msg->Nid, NetworkIdToBulletAsset[(int)Msg->Nid],
             Msg->x, Msg->y);
         }
       }

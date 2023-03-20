@@ -1,13 +1,26 @@
 #include <Systems/RendererSystems.hpp>
 
-Color IndexToRGB[6] = {PlayerColorPink, PlayerColorGreen, PlayerColorRed,
-  PlayerColorCyan, PlayerColorLime, PlayerColorOrange};
+Color IndexToRGB[] = {PlayerColorPink, PlayerColorGreen, PlayerColorRed,
+  PlayerColorCyan, PlayerColorLime, PlayerColorOrange, WHITE, {0, 0, 0, 100}};
 
-// Todo rework sprite system to work with depth and delete unwanted systems
+// Todo delete unwanted systems
 void SpriteRendererSystem(entt::registry& Scene, Texture2D& Tex,
   std::map<string, SpriteAsset>& Assets)
 {
-  auto View = Scene.view<Position, Sprite>();
+  // Sort the order based on depth so the rendering order is correct
+  Scene.sort<Sprite>([&Scene](const entt::entity& A, const entt::entity& B){
+    auto& ASpr = Scene.get<Sprite>(A);
+    auto& BSpr = Scene.get<Sprite>(B);
+
+    if (BSpr.Depth > ASpr.Depth) return true;
+    
+    if(BSpr.Depth == ASpr.Depth)
+      if ((uint32_t)B < (uint32_t)A) return true;
+
+    return false;
+  });
+
+  auto View = Scene.view<Position, Sprite>().use<Sprite>();
   for (auto Entity : View)
   {
     auto& Pos = View.get<Position>(Entity);
@@ -16,65 +29,7 @@ void SpriteRendererSystem(entt::registry& Scene, Texture2D& Tex,
     DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
       Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
       {Pos.x - Spr.OffsetX, Pos.y - Spr.OffsetY},
-      WHITE);
-  }
-}
-
-void SmudgeRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, Smudge>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Spr = View.get<Smudge>(Entity);
-
-    DrawTextureRec(Tex, {Assets[Spr.Asset].x, Assets[Spr.Asset].y,
-      Assets[Spr.Asset].Width, Assets[Spr.Asset].Height},
-      {Pos.x - Assets[Spr.Asset].OffsetX, Pos.y - Assets[Spr.Asset].OffsetY},
       IndexToRGB[Spr.Color]);
-  }
-}
-
-void ShadowRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<Position, Shadow>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Sha = View.get<Shadow>(Entity);
-
-    DrawTextureRec(Tex, {Assets[Sha.Asset].x, Assets[Sha.Asset].y,
-      Assets[Sha.Asset].Width, Assets[Sha.Asset].Height},
-      {Pos.x - Assets[Sha.Asset].OffsetX, Pos.y - Assets[Sha.Asset].OffsetY},
-      {0, 0, 0, 100});
-  }
-}
-
-void BackgroundRendererSystem(entt::registry& Scene, Texture2D& Tex,
-  std::map<string, SpriteAsset>& Assets)
-{
-  auto View = Scene.view<TileTag, Position>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-
-    DrawTextureRec(Tex, {Assets["FloorTile"].x, Assets["FloorTile"].y,
-      Assets["FloorTile"].Width, Assets["FloorTile"].Height},
-      {Pos.x, Pos.y}, WHITE);
-  }
-}
-
-void ColliderDebugRendererSystem(entt::registry& Scene)
-{
-  auto View = Scene.view<Position, Collider>();
-  for (auto Entity : View)
-  {
-    auto& Pos = View.get<Position>(Entity);
-    auto& Col = View.get<Collider>(Entity);
-
-    DrawCircleV({Pos.x, Pos.y}, Col.Diameter / 2.0f, {85, 170, 250, 191});
   }
 }
 

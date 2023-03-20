@@ -14,6 +14,8 @@ struct Position
 struct Sprite
 {
   std::string Asset;
+  int Depth;
+  int Color;
   float OffsetX = 0.0f;
   float OffsetY = 0.0f;
   float OgOffsetX = OffsetX;
@@ -67,7 +69,7 @@ struct Health
 
 struct Shadow
 {
-  std::string Asset;
+  uint32_t Reference;
 };
 
 struct Shake
@@ -102,4 +104,3 @@ struct TeamId
 
 struct PlayerTag{};
 struct BulletTag{};
-struct TileTag{};

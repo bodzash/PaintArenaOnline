@@ -7,3 +7,4 @@
 
 void DynamicMovementSystem(float DeltaTime, entt::registry& Scene);
 void DirectionalMovementSystem(entt::registry& Scene, float Delta);
+void ShadowFollowOwnerSystem(entt::registry& Scene);

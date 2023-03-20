@@ -11,12 +11,13 @@ entt::entity CreatePrefabSmudgeSmall(entt::registry& Scene, float x, float y,
 
   entt::entity Effect = Scene.create();
   Scene.emplace<Position>(Effect, x, y);
-  Scene.emplace<Smudge>(Effect, Asset, (int)NetId);
+  Scene.emplace<Sprite>(Effect, Asset, 1, (int)NetId);
   Scene.emplace<Audio>(Effect, "Splash1", "Splash2", true, true);
 
   return Effect;
 }
 
+// Thanks raylib team for removing DrawTextureTiled <3
 void CreatePrefabTiles(entt::registry& Scene)
 {
   for(int i = 0; i <= 14; i++)
@@ -24,8 +25,8 @@ void CreatePrefabTiles(entt::registry& Scene)
     for(int j = 0; j <= 10; j++)
     {
       entt::entity Tile = Scene.create();
-      Scene.emplace<TileTag>(Tile);
       Scene.emplace<Position>(Tile, 16.0f * i, 16.0f * j);
+      Scene.emplace<Sprite>(Tile, "FloorTile", 0, 6);
     }
   }
 }
@@ -33,6 +34,10 @@ void CreatePrefabTiles(entt::registry& Scene)
 entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t Team, float x, float y,
   string Skin)
 {
+  entt::entity Shdw = Scene.create();
+  Scene.emplace<Position>(Shdw, x, y);
+  Scene.emplace<Sprite>(Shdw, "PlayerShadow", 2, 7, 4.0f, -2.0f);
+
   entt::entity Player = Scene.create();
   Scene.emplace<PlayerTag>(Player);
   Scene.emplace<TeamId>(Player,Team);
@@ -40,8 +45,8 @@ entt::entity CreatePrefabPlayer(entt::registry& Scene, uint8_t Team, float x, fl
   Scene.emplace<Position>(Player, x, y);
   Scene.emplace<Collider>(Player, 8.0f);
   Scene.emplace<Audio>(Player, "Hit1", "Hit2", false, false);
-  Scene.emplace<Sprite>(Player, Skin, 4.0f, 4.0f, 4.0f, 4.0f);
-  Scene.emplace<Shadow>(Player, "PlayerShadow");
+  Scene.emplace<Sprite>(Player, Skin, 3, 6, 4.0f, 4.0f, 4.0f, 4.0f);
+  Scene.emplace<Shadow>(Player, (uint32_t)Shdw);
   Scene.emplace<Shake>(Player);
 
   return Player;
@@ -58,8 +63,8 @@ void CreatePrefabBullet(entt::registry& Scene, uint8_t Team, float x, float y, f
   Scene.emplace<Speed>(Bullet, 140.0f);
   Scene.emplace<Collider>(Bullet, 4.0f);
   Scene.emplace<Audio>(Bullet, "Shoot1", "Shoot2", true, true);
-  Scene.emplace<Sprite>(Bullet, Skin, 2.0f, 2.0f);
-  Scene.emplace<Shadow>(Bullet, "BulletShadow");
+  Scene.emplace<Sprite>(Bullet, Skin, 4, 6, 2.0f, 2.0f);
+  //Scene.emplace<Shadow>(Bullet, "BulletShadow");
 }
 
 void CreatePrefabBigSmudge(entt::registry& Scene, uint8_t Team, float x, float y)
@@ -71,10 +76,10 @@ void CreatePrefabBigSmudge(entt::registry& Scene, uint8_t Team, float x, float y
 
   entt::entity Effect = Scene.create();
   Scene.emplace<Position>(Effect, x, y);
-  Scene.emplace<Smudge>(Effect, Asset, (int)Team);
+  Scene.emplace<Sprite>(Effect, Asset, 1, (int)Team);
 }
 
-void CreatePrefabSmallSmudge(entt::registry& Scene, uint8_t Team, string Skin,
+void CreatePrefabSmudgeBall(entt::registry& Scene, uint8_t Team, string Skin,
   float x, float y)
 {
   entt::entity Ball = Scene.create();
@@ -82,7 +87,7 @@ void CreatePrefabSmallSmudge(entt::registry& Scene, uint8_t Team, string Skin,
   Scene.emplace<Direction>(Ball, (float)(rand() % 628) / 100.0f);
   Scene.emplace<Speed>(Ball, (float)((rand() % 130 - 80) + 80));
   Scene.emplace<TeamId>(Ball, Team);
-  Scene.emplace<Sprite>(Ball, Skin, 2.0f, 2.0f);
-  Scene.emplace<Shadow>(Ball, "BulletShadow");
+  Scene.emplace<Sprite>(Ball, Skin, 1, 6, 2.0f, 2.0f);
+  //Scene.emplace<Shadow>(Ball, "BulletShadow");
   Scene.emplace<SmudgeBall>(Ball, 5.0f + (float)(rand() % 10));
 }

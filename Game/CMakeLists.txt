@@ -44,7 +44,7 @@ if(IS_CLIENT)
 
   target_link_libraries(${PROJECT_NAME} raylib enet)
 
-  set(CMAKE_CXX_FLAGS "-mwindows MetadataClient.res")
+  set(CMAKE_CXX_FLAGS "MetadataClient.res") #-mwindows
 
 else()
 

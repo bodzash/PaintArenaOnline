@@ -52,7 +52,7 @@ int main(void)
   LoadAllTextureAssets(TextureAssets);
   LoadAllAudioAssets(AudioAssets);
 
-  // Fill background
+  // Create background -_-
   CreatePrefabTiles(Scene);
 
   // Connect to server
@@ -76,6 +76,7 @@ int main(void)
     }
 
     // Update
+    ShadowFollowOwnerSystem(Scene);
     AudioPlayerSystem(Scene, AudioAssets);
     DirectionalMovementSystem(Scene, GetFrameTime());
     ClientBulletDamageSystem(Scene);
@@ -87,11 +88,7 @@ int main(void)
     BeginDrawing();
       ClearBackground({167, 167, 167, 255});
       BeginMode2D(MainCamera);
-        BackgroundRendererSystem(Scene, TextureAtlas, TextureAssets);
-        SmudgeRendererSystem(Scene, TextureAtlas, TextureAssets);
-        ShadowRendererSystem(Scene, TextureAtlas, TextureAssets);
         SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-        //ColliderDebugRendererSystem(Scene);
         CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
       // Debug START

@@ -36,3 +36,19 @@ void DirectionalMovementSystem(entt::registry& Scene, float Delta)
     Pos.y += (Spd.MaxSpeed * (float)sin(Dir.Angle)) * Delta;
   }
 }
+
+void ShadowFollowOwnerSystem(entt::registry& Scene)
+{
+  auto View = Scene.view<Position, Shadow>();
+  for (auto Entity : View)
+  {
+    auto& Pos = View.get<Position>(Entity);
+    auto& Shd = View.get<Shadow>(Entity);
+
+    entt::entity SEntity = (entt::entity)Shd.Reference;
+    auto& SPos = Scene.get<Position>(SEntity);
+
+    SPos.x = Pos.x;
+    SPos.y = Pos.y;
+  }
+}
