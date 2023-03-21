@@ -131,17 +131,17 @@ int main(void)
       // Render 2D
       BeginMode2D(MainCamera);
       SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-      // TODO move this and rework it as well
-      CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
+
       // Render UI
       UIInputBoxSystem(Scene, FontAssets);
       UIRenderLabelSystem(Scene, FontAssets);
       UIRenderButtonSystem(Scene, FontAssets);
-      // Debug
-      DrawFPS(8, 4);
-      DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
-        IsConnected() ? GREEN : RED);
+
+      // Render Cursor
+      BeginMode2D(MainCamera);
+      CursorRenderingSystem(TextureAtlas, TextureAssets);
+      EndMode2D();
     EndDrawing();
   }
 
