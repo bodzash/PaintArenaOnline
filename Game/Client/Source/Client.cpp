@@ -62,7 +62,16 @@ int main(void)
 
   // Menu test TODO tidy up
   entt::entity Label = Scene.create();
-  Scene.emplace<UILabel>(Label, 200.0f, 200.0f, "This is a label :D", 32.0f);
+  Scene.emplace<UILabel>(Label, (Vector2){200.0f, 200.0f}, "This is a label :D",
+    GREEN, 32.0f);
+
+  entt::entity Mute = Scene.create();
+  Scene.emplace<UILabel>(Mute, (Vector2){4.0f, (704.f - (32.0f + 2.0f))},
+    "Press M to toggle Mute", BLACK, 32.0f);
+
+  entt::entity Input = Scene.create();
+  UILabel Lab = {(Vector2){8.0f, 2.0f}, "Default", BLACK, 32.0f};
+  Scene.emplace<UIInputBox>(Input, (Rectangle){60.0f, 60.0f, 240.0f, 40.0f}, 16, Lab);
 
   // Connect to server TODO move this and do checking
   ConnectToServer("127.0.0.1", 7777);
@@ -95,18 +104,21 @@ int main(void)
 
     // Render
     BeginDrawing();
+      // Clear canvas
       ClearBackground({167, 167, 167, 255});
+      // Render 2D
       BeginMode2D(MainCamera);
-        SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
-        CursorRenderingSystem(TextureAtlas, TextureAssets);
+      SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
+      // TODO move this and rework it as well
+      CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
       // Render UI
+      UIInputBoxSystem(Scene, FontAssets);
       UIRenderLabelSystem(Scene, FontAssets);
-      // Debug START
+      // Debug
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
         IsConnected() ? GREEN : RED);
-      // Debug END
     EndDrawing();
   }
 

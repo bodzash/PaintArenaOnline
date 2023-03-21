@@ -3,32 +3,31 @@
 #include <string>
 #include <functional>
 
+#include "raylib.h"
+
 using std::string;
 
 struct UILabel
 {
-  float x;
-  float y;
+  Vector2 Pos;
   string Text;
+  Color FontColor = BLACK;
   float FontSize = 16.0f;
 };
 
 struct UIInputBox
 {
-  float x;
-  float y;
-  float Width;
-  float Height;
+  Rectangle Rect;
   int Limit;
   UILabel Label;
+  bool _bIsActive;
+  int _DelayTime = 0;
+  int _CursorPulse = 60;
 };
 
 struct UIButton
 {
-  float x;
-  float y;
-  float Width;
-  float Height;
+  Rectangle Rect;
   UILabel Label;
   //lambda Action
 };
