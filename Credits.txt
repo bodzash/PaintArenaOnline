@@ -14,3 +14,8 @@ Player, Bullet, Smudge sprites
 Usergames (https://www.youtube.com/@usergames-net)
 Modified by: Laszlo Bozzay (https://github.com/bodzash)
 Unknown License
+
+m5x7 font
+Daniel Linssen (https://twitter.com/managore)
+No specific given CC license
+"free to use but attribution appreciated"

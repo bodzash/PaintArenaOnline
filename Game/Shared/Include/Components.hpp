@@ -2,9 +2,6 @@
 
 #include <string>
 
-// BIG TODO RENAME ALL OF THESE TO ...Component
-
-// TODO PositionComponent
 struct Position
 {
   float x = 0.0f;
@@ -54,7 +51,6 @@ struct Speed
   float Deceleration = 0.0f;
 };
 
-// TODO NetworkComponent
 struct NetworkId
 {
   uint8_t Id;
@@ -96,7 +92,6 @@ struct PlayerInput
   bool bDown;
 };
 
-// TODO rename this pos
 struct TeamId
 {
   uint8_t Team;

@@ -10,6 +10,7 @@
 #include "ClNetworking.hpp"
 #include "ClPrefabs.hpp"
 #include "Components.hpp"
+#include "UIComponents.hpp"
 #include "Systems/AudioSystems.hpp"
 #include "Systems/BulletSystems.hpp"
 #include "Systems/RendererSystems.hpp"
@@ -18,6 +19,7 @@
 #include "Systems/ClInputSystems.hpp"
 #include "Systems/MovementSystems.hpp"
 #include "Systems/BoundsSystems.hpp"
+#include "Systems/UISystems.hpp"
 
 using std::string;
 
@@ -42,6 +44,7 @@ int main(void)
   Texture2D TextureAtlas = LoadTexture("./Resources/SpriteAtlas.png");
   std::map<string, SpriteAsset> TextureAssets;
   std::map<string, Sound> AudioAssets;
+  std::map<string, Font> FontAssets;
   Camera2D MainCamera;
   bool bMuted = false;
   MainCamera.target = {0.0f, 0.0f};
@@ -52,9 +55,14 @@ int main(void)
   // Load Assets
   LoadAllTextureAssets(TextureAssets);
   LoadAllAudioAssets(AudioAssets);
+  LoadAllFontAssets(FontAssets);
 
   // Create background
   CreatePrefabTiles(Scene);
+
+  // Menu test TODO tidy up
+  entt::entity Label = Scene.create();
+  Scene.emplace<UILabel>(Label, 200.0f, 200.0f, "This is a label :D", 32.0f);
 
   // Connect to server TODO move this and do checking
   ConnectToServer("127.0.0.1", 7777);
@@ -92,6 +100,8 @@ int main(void)
         SpriteRendererSystem(Scene, TextureAtlas, TextureAssets);
         CursorRenderingSystem(TextureAtlas, TextureAssets);
       EndMode2D();
+      // Render UI
+      UIRenderLabelSystem(Scene, FontAssets);
       // Debug START
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
