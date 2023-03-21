@@ -62,6 +62,7 @@ bool ConnectToServer(std::string IP, int Port)
   }
   catch(const int ErrorCode)
   {
+    Address = ENetAddress();
     return false;
   }
 }

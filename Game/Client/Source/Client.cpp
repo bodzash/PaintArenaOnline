@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <thread>
 
 #include "raylib.h"
 #include "entt/entity/registry.hpp"
@@ -47,6 +48,7 @@ int main(void)
   std::map<string, Font> FontAssets;
   Camera2D MainCamera;
   bool bMuted = false;
+  //bool bGameShouldRun = true;
   MainCamera.target = {0.0f, 0.0f};
   MainCamera.offset = {0.0f, 0.0f};
   MainCamera.rotation = 0.0f;
@@ -57,24 +59,44 @@ int main(void)
   LoadAllAudioAssets(AudioAssets);
   LoadAllFontAssets(FontAssets);
 
+  // Place a toggle mute label
+  entt::entity Mute = Scene.create();
+  Scene.emplace<UILabel>(Mute, (Vector2){4.0f, (704.f - (32.0f + 2.0f))},
+    "Press M to toggle Mute", 32.0f);
+
   // Create background
   CreatePrefabTiles(Scene);
 
-  // Menu test TODO tidy up
-  entt::entity Label = Scene.create();
-  Scene.emplace<UILabel>(Label, (Vector2){200.0f, 200.0f}, "This is a label :D",
-    GREEN, 32.0f);
-
-  entt::entity Mute = Scene.create();
-  Scene.emplace<UILabel>(Mute, (Vector2){4.0f, (704.f - (32.0f + 2.0f))},
-    "Press M to toggle Mute", BLACK, 32.0f);
-
+  // Menu test TODO tidy
   entt::entity Input = Scene.create();
-  UILabel Lab = {(Vector2){8.0f, 2.0f}, "Default", BLACK, 32.0f};
-  Scene.emplace<UIInputBox>(Input, (Rectangle){60.0f, 60.0f, 240.0f, 40.0f}, 16, Lab);
+  Rectangle InpBox = {480.0f - 158.0f, 200.0f, 316.0f, 40.0f};
+  UILabel Lab = {(Vector2){8.0f, 2.0f}, "", 32.0f};
+  Scene.emplace<UIInputBox>(Input, InpBox, 15, Lab, "Enter IP here");
 
-  // Connect to server TODO move this and do checking
-  ConnectToServer("127.0.0.1", 7777);
+  entt::entity StatusLabel = Scene.create();
+  Scene.emplace<UILabel>(StatusLabel, (Vector2){480.0f - 158.0f, 288.0f}, "", 24.0f);
+
+  entt::entity Btn = Scene.create();
+  Rectangle BtnBox = {480.0f - 158.0f, 248.0f, 316.0f, 40.0f};
+  UILabel BtnLab = {(Vector2){32.0f, 2.0f}, "Connect to Server", 32.0f};
+  Scene.emplace<UIButton>(Btn, BtnBox, BtnLab, [&Scene, &Input, &StatusLabel, &Btn](){
+    auto& Inp = Scene.get<UIInputBox>(Input);
+    auto& Status = Scene.get<UILabel>(StatusLabel);
+
+    Status.Text = "Connecting to server...";
+
+    if (ConnectToServer(Inp.Label.Text, 7777))
+    {
+      Scene.destroy(Input);
+      Scene.destroy(StatusLabel);
+
+      Scene.destroy(Btn);
+    }
+    else
+    {
+      Status.Text = "Connection failed... Try again!";
+    }
+  });
   
   // Game loop
   while (!WindowShouldClose())
@@ -115,6 +137,7 @@ int main(void)
       // Render UI
       UIInputBoxSystem(Scene, FontAssets);
       UIRenderLabelSystem(Scene, FontAssets);
+      UIRenderButtonSystem(Scene, FontAssets);
       // Debug
       DrawFPS(8, 4);
       DrawText(IsConnected() ? "Connected" : "Disconnected", 8, 24, 24,
@@ -123,7 +146,6 @@ int main(void)
   }
 
   // Cleanup
-  Disconnect();
   DeInitENet();
   CloseAudioDevice();
   CloseWindow();

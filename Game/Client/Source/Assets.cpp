@@ -52,6 +52,5 @@ void LoadAllAudioAssets(std::map<string, Sound>& AudioAssets)
 
 void LoadAllFontAssets(std::map<string, Font>& FontAssets)
 {
-  // Load font in a big size so it scales down well
-  FontAssets["m5x7"] = LoadFontEx("./Resources/m5x7.ttf", 64, 0, 255);
+  FontAssets["m5x7"] = LoadFontEx("./Resources/m5x7.ttf", 128, 0, 255);
 }

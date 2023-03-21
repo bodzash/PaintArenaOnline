@@ -30,7 +30,7 @@ int main()
   ENetHost* pServer;
   ENetEvent Event;
   ENetAddress Address = {ENET_HOST_ANY, 7777};
-
+  
   // Init
   if (!InitServerHost(pServer, Address)) return EXIT_FAILURE;
 
