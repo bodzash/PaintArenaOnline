@@ -3,7 +3,8 @@
 #include "entt/entity/registry.hpp"
 
 bool IsConnected();
-void ConnectToServer();
+bool InitClientPeer();
+bool ConnectToServer(std::string IP, int Port);
 void PollNetwork(entt::registry& Scene);
 void SendMovement(bool bLeft, bool bRight, bool bUp, bool bDown);
 void SendShooting(float Angle);

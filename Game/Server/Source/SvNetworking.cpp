@@ -2,26 +2,23 @@
 
 bool InitServerHost(ENetHost*& pServer, ENetAddress Address)
 {
-  // Try to init ENet
-  if (enet_initialize() != 0)
+  try
   {
-    std::cout << "[Fatal] Networking library failed to initialize" << "\n";
-    return false;
-  }
-  else
-  {
-    // Try to create host
+    if (enet_initialize() != 0) throw 0;
     pServer = enet_host_create(&Address, 6, 1, 0, 0);
-    if (pServer == NULL)
-    {
-      std::cout << "[Fatal] Networking library failed to create host" << "\n";
-      return false;
-    }
+    if (pServer == NULL) throw 1;
+    std::cout << "[Info] Game Server Started" << "\n";
+    
+    return true;
+  }
+  catch(const int ErrorCode)
+  {
+    if (ErrorCode == 0)
+      std::cerr << "[Fatal] Networking library failed to initialize" << "\n";
     else
-    {
-      std::cout << "[Info] Game Server Started" << "\n";
-      return true;
-    }
+      std::cerr << "[Fatal] Networking library failed to create host" << "\n";
+
+    return false;
   }
 }
 

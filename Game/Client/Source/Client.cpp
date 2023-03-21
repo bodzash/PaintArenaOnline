@@ -35,6 +35,7 @@ int main(void)
   SetTargetFPS(60);
   HideCursor();
   SetRandomSeed();
+  if (!InitClientPeer()) return EXIT_FAILURE;
 
   // Setup
   entt::registry Scene;
@@ -52,11 +53,11 @@ int main(void)
   LoadAllTextureAssets(TextureAssets);
   LoadAllAudioAssets(AudioAssets);
 
-  // Create background -_-
+  // Create background
   CreatePrefabTiles(Scene);
 
-  // Connect to server
-  ConnectToServer();
+  // Connect to server TODO move this and do checking
+  ConnectToServer("127.0.0.1", 7777);
   
   // Game loop
   while (!WindowShouldClose())

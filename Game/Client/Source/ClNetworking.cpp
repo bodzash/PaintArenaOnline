@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <cmath>
 
 #include "enet/enet.h"
@@ -26,22 +27,45 @@ bool IsConnected()
   return bConnected;
 }
 
-// TODO CLEANUP
-void ConnectToServer()
+bool InitClientPeer()
 {
-  if (enet_initialize() != 0) std::cout << "Init failed lol :D" << "\n";
+  try
+  {
+    // Init
+    if (enet_initialize() != 0) throw 0;
 
-  Client = enet_host_create(NULL, 1, 1, 0, 0);
-  if (Client == NULL) std::cout << "Error when trying to create client host" << "\n";
+    // Create client
+    Client = enet_host_create(NULL, 1, 1, 0, 0);
+    if (Client == NULL) throw 1;
 
-  enet_address_set_host(&Address, "127.0.0.1");
-  Address.port = 7777;
-
-  Peer = enet_host_connect(Client, &Address, 1, 0);
-  if (Peer == NULL) std::cout << "No available peer to initiate connection" << "\n";
+    return true;
+  }
+  catch(const int ErrorCode)
+  {
+    return false;
+  }
 }
 
-// TODO CLEANUP
+bool ConnectToServer(std::string IP, int Port)
+{
+  try
+  {
+    // Set address
+    if (enet_address_set_host(&Address, IP.c_str()) != 0) throw 0;
+    Address.port = (enet_uint16)Port;
+
+    // Connect  (set peer to server)
+    Peer = enet_host_connect(Client, &Address, 1, 0);
+    if (Peer == NULL) throw 1;
+
+    return true;
+  }
+  catch(const int ErrorCode)
+  {
+    return false;
+  }
+}
+
 void PollNetwork(entt::registry& Scene)
 {
   while(enet_host_service(Client, &Event, 0) > 0)
